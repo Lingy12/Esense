@@ -52,6 +52,7 @@ public class ActivityListAdapter extends BaseAdapter {
         holder.duration.setText(listData.get(position).getDuration());
         return v;
     }
+
     static class ViewHolder {
         TextView startTime;
         TextView stopTime;

@@ -55,6 +55,17 @@ public class SensorListenerManager implements ESenseSensorListener {
     }
 
     /**
+     * Set up the sensor with given configuration.
+     *
+     * @param context Application context.
+     * @param eSenseConfig Configuration of sensor.
+     */
+    public SensorListenerManager(Context context, ESenseConfig eSenseConfig) {
+        this(context);
+        this.eSenseConfig = eSenseConfig;
+    }
+
+    /**
      * Called when there is new sensor data available
      *
      * @param evt object containing the sensor samples received

@@ -22,7 +22,7 @@ public class AudioRecordService extends Service {
         super.onCreate();
         Log.d(TAG, "onCreate()");
 
-        audioRecorder = new AudioRecorder(this);
+        audioRecorder = new AudioRecorder(this); //create an recorder
         audioManager = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
 
         audioManager.setMode(audioManager.MODE_NORMAL);

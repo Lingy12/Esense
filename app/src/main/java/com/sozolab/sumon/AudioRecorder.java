@@ -50,6 +50,7 @@ public class AudioRecorder {
 
         activity = activityName;
 
+        //check the memory
         if(getAvailableDeviceMemory() > 100){
             configureMediaRecorderSetting();
             startRecording();
@@ -61,11 +62,12 @@ public class AudioRecorder {
         }
     }
 
+    //configurate media setting
     public void configureMediaRecorderSetting(){
 
         try {
             if(mediaRecorder != null){
-                mediaRecorder.setAudioSource(MediaRecorder.AudioSource.MIC);
+                mediaRecorder.setAudioSource(MediaRecorder.AudioSource.MIC);//set audio source to mic
                 mediaRecorder.setOutputFormat(MediaRecorder.OutputFormat.THREE_GPP);
                 mediaRecorder.setAudioEncoder(MediaRecorder.OutputFormat.AMR_NB);
                 mediaRecorder.setAudioEncodingBitRate(256000);

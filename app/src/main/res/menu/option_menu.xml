@@ -12,4 +12,7 @@
         android:icon="@drawable/reset"
         android:title="Reset" />
 
+    <item android:id="@+id/setting_menu"
+        android:icon="@drawable/ic_group_collapse_12"
+        android:title="Setting" />
 </menu>

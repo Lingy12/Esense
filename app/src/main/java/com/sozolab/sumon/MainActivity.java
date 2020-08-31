@@ -11,7 +11,9 @@ import android.os.Build;
 import android.os.SystemClock;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
+import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBar;
+import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -25,8 +27,10 @@ import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
+import android.widget.Toast;
 import android.widget.ToggleButton;
 
+import com.sozolab.sumon.io.esense.esenselib.ESenseConfig;
 import com.sozolab.sumon.io.esense.esenselib.ESenseManager;
 
 import java.util.ArrayList;
@@ -38,12 +42,17 @@ import static android.Manifest.permission.ACCESS_FINE_LOCATION;
 import static android.Manifest.permission.WRITE_EXTERNAL_STORAGE;
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener {
-
+    public static String DEFAULT_NAME = "eSense-0371";
+    protected static ESenseConfig config = new ESenseConfig();
+    protected static String deviceName = DEFAULT_NAME;
+    protected static ESenseManager eSenseManager;
+    protected static int samplingRate = 10;
     private String TAG = "Esense";
-    private String deviceName = "eSense-0181";  // "eSense-0598"
     private String activityName = "Activity";
     private int timeout = 30000;
 
+    private DrawerLayout drawerLayout;
+    private ActionBarDrawerToggle drawerToggle;
     private Button connectButton;
     private Button headShakeButton;
     private Button speakingButton;
@@ -65,7 +74,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private SharedPreferences.Editor sharedPrefEditor;
 
     Calendar currentTime;
-    ESenseManager eSenseManager;
     Activity activityObj;
     Intent audioRecordServiceIntent;
     DatabaseHandler databaseHandler;
@@ -73,11 +81,15 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     ConnectionListenerManager connectionListenerManager;
     private static final int PERMISSION_REQUEST_CODE = 200;
 
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        if(!deviceName.equals(DEFAULT_NAME)) {
+            Log.d(this.TAG,"Name changed");
+        }
         Log.d(TAG, "onCreate()");
         ActionBar actionBar = getSupportActionBar();
         actionBar.setDisplayShowHomeEnabled(true);
@@ -121,10 +133,13 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         }
 
         audioRecordServiceIntent = new Intent(this, AudioRecordService.class);
-        sensorListenerManager = new SensorListenerManager(this);
+        sensorListenerManager = new SensorListenerManager(this,config);
         connectionListenerManager = new ConnectionListenerManager(this, sensorListenerManager,
                 connectionTextView, deviceNameTextView, statusImageView, progressBar, sharedPrefEditor);
         eSenseManager = new ESenseManager(deviceName, MainActivity.this.getApplicationContext(), connectionListenerManager);
+        eSenseManager.registerSensorListener(sensorListenerManager,samplingRate);
+
+        Toast.makeText(this,String.format("Sampling rate is %dHz",samplingRate), Toast.LENGTH_SHORT).show();
 
         if (!checkPermission()) {
             requestPermission();
@@ -161,7 +176,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             case R.id.reset_menu:
                 //Toast.makeText(this, "Reset connection..", Toast.LENGTH_SHORT).show();
                 return true;
-
+            case R.id.setting_menu:
+                showSetting();
+                this.finish();
             default:
                 return super.onOptionsItemSelected(item);
         }
@@ -446,6 +463,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 .setNegativeButton("Cancel", null)
                 .create()
                 .show();
+    }
+
+    private void showSetting() {
+        Intent intent = new Intent(this,SettingActivity.class);
+        startActivity(intent);
     }
 
     public void showAlertMessage(){
