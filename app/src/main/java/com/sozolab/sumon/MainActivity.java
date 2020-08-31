@@ -30,6 +30,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.ToggleButton;
 
+import com.google.gson.Gson;
 import com.sozolab.sumon.io.esense.esenselib.ESenseConfig;
 import com.sozolab.sumon.io.esense.esenselib.ESenseManager;
 
@@ -43,10 +44,10 @@ import static android.Manifest.permission.WRITE_EXTERNAL_STORAGE;
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener {
     public static String DEFAULT_NAME = "eSense-0371";
-    protected static ESenseConfig config = new ESenseConfig();
-    protected static String deviceName = DEFAULT_NAME;
-    protected static ESenseManager eSenseManager;
-    protected static int samplingRate = 10;
+    private ESenseConfig config = new ESenseConfig();
+    private String deviceName = DEFAULT_NAME;
+    private ESenseManager eSenseManager;
+    private int samplingRate = 10;
     private String TAG = "Esense";
     private String activityName = "Activity";
     private int timeout = 30000;
@@ -87,9 +88,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        if(!deviceName.equals(DEFAULT_NAME)) {
-            Log.d(this.TAG,"Name changed");
-        }
         Log.d(TAG, "onCreate()");
         ActionBar actionBar = getSupportActionBar();
         actionBar.setDisplayShowHomeEnabled(true);
@@ -97,6 +95,16 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         sharedPreferences = getSharedPreferences("eSenseSharedPrefs",Context.MODE_PRIVATE);
         sharedPrefEditor = sharedPreferences.edit();
+        deviceName = sharedPreferences.getString("deviceName","eSense-0371");
+        samplingRate = sharedPreferences.getInt("samplingRate",10);
+        String parsedConfig = sharedPreferences.getString("eSenseConfig","");
+
+        if (parsedConfig.equals("")) {
+            config = new ESenseConfig(); //default configuration
+        } else {
+            Gson gson = new Gson();
+            config = gson.fromJson(parsedConfig,ESenseConfig.class);
+        }
 
         recordButton = (ToggleButton) findViewById(R.id.recordButton);
         connectButton =  (Button) findViewById(R.id.connectButton);
@@ -171,7 +179,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         switch (item.getItemId()) {
             case R.id.clear_menu:
-                //Toast.makeText(this, "Clear history...", Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, "Clear history...", Toast.LENGTH_SHORT).show();
+                databaseHandler.clearAll();
                 return true;
             case R.id.reset_menu:
                 //Toast.makeText(this, "Reset connection..", Toast.LENGTH_SHORT).show();
@@ -294,6 +303,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
                     sharedPrefEditor.putString("checked", "off");
                     sharedPrefEditor.commit();
+
                     recordButton.setBackgroundResource(R.drawable.start);
 
                     stopDataCollection();
@@ -390,8 +400,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     public void setActivityName(){
         activityTextView.setText(activityName);
-
     }
+
     public void connectEarables(){
         eSenseManager.connect(timeout);
     }

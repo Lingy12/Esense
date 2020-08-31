@@ -1,6 +1,8 @@
 package com.sozolab.sumon;
 
+import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.nfc.Tag;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
@@ -11,6 +13,7 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Spinner;
 
+import com.google.gson.Gson;
 import com.sozolab.sumon.io.esense.esenselib.ESenseConfig;
 
 public class SettingActivity extends AppCompatActivity implements View.OnClickListener {
@@ -22,12 +25,17 @@ public class SettingActivity extends AppCompatActivity implements View.OnClickLi
     Spinner lpfGyro;
     Spinner lpfAcc;
     Button saveButton;
+    private SharedPreferences preferences ;
+    private SharedPreferences.Editor editor;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.setting_menu);
         Intent intent = getIntent();
+        preferences = getSharedPreferences("eSenseSharedPrefs",Context.MODE_PRIVATE);
+        Log.d(TAG,preferences.getString("deviceName",""));
+        editor = preferences.edit();
 
         deviceName = (EditText) findViewById(R.id.device_id);
         sampleRate = (EditText) findViewById(R.id.sensing_frq);
@@ -39,27 +47,40 @@ public class SettingActivity extends AppCompatActivity implements View.OnClickLi
         lpfAcc = (Spinner) findViewById(R.id.acc_lpf);
         lpfGyro = (Spinner) findViewById(R.id.gyro_lpf);
 
-        ArrayAdapter accAdapter = new ArrayAdapter(this,android.R.layout.simple_spinner_item,ESenseConfig.AccRange.values());
-        ArrayAdapter lpfaAdapter = new ArrayAdapter(this,android.R.layout.simple_spinner_item,ESenseConfig.AccLPF.values());
-        ArrayAdapter lpfgAdpter = new ArrayAdapter(this,android.R.layout.simple_spinner_item,ESenseConfig.GyroLPF.values());
-        ArrayAdapter gyrpAdpter = new ArrayAdapter(this,android.R.layout.simple_spinner_item,ESenseConfig.GyroRange.values());
+        ArrayAdapter<ESenseConfig.AccRange> accAdapter = new ArrayAdapter(this,android.R.layout.simple_spinner_item,ESenseConfig.AccRange.values());
+        ArrayAdapter<ESenseConfig.AccLPF> lpfaAdapter = new ArrayAdapter(this,android.R.layout.simple_spinner_item,ESenseConfig.AccLPF.values());
+        ArrayAdapter<ESenseConfig.GyroLPF> lpfgAdpter = new ArrayAdapter(this,android.R.layout.simple_spinner_item,ESenseConfig.GyroLPF.values());
+        ArrayAdapter<ESenseConfig.GyroRange> gyrpAdpter = new ArrayAdapter(this,android.R.layout.simple_spinner_item,ESenseConfig.GyroRange.values());
 
         setAdpter(accSelector,accAdapter);
         setAdpter(gyroSelecttor,gyrpAdpter);
         setAdpter(lpfAcc,lpfaAdapter);
         setAdpter(lpfGyro,lpfgAdpter);
 
-        deviceName.setText(MainActivity.DEFAULT_NAME);
-        sampleRate.setText("5");
+        String currentJson = preferences.getString("eSenseConfig","");
+        ESenseConfig currentCofig ;
+
+        assert currentJson != null;
+        if (currentJson.equals("")) {
+            currentCofig = new ESenseConfig();
+        } else {
+            Gson gson = new Gson();
+            currentCofig = gson.fromJson(currentJson,ESenseConfig.class);
+        }
+
+        accSelector.setSelection(indexOf(ESenseConfig.AccRange.values(),currentCofig.getAccRange()));
+        gyroSelecttor.setSelection(indexOf(ESenseConfig.GyroRange.values(),currentCofig.getGyroRange()));
+        lpfAcc.setSelection(indexOf(ESenseConfig.AccLPF.values(),currentCofig.getAccLPF()));
+        lpfGyro.setSelection(indexOf(ESenseConfig.GyroLPF.values(),currentCofig.getGyroLPF()));
+
+        deviceName.setText(preferences.getString("deviceName",""));
+        sampleRate.setText(String.format("%d",preferences.getInt("samplingRate",1)));
         saveButton.setOnClickListener(this);
-//        accSelector.setSelection(0);
-//        gyroSelecttor.setSelection(0);
     }
 
     private void setAdpter(Spinner spinner, ArrayAdapter adapter) {
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         spinner.setAdapter(adapter);
-        spinner.setSelection(0);
     }
 
     @Override
@@ -73,11 +94,28 @@ public class SettingActivity extends AppCompatActivity implements View.OnClickLi
         ESenseConfig.GyroRange gyroRange = (ESenseConfig.GyroRange) this.gyroSelecttor.getSelectedItem();
 
         Log.d(TAG,"Onclick()");
-        MainActivity.deviceName = deviceName;
+        editor.putInt("samplingRate",Integer.parseInt(sampleRate));
+        editor.putString("deviceName",deviceName);
+        editor.commit();
 
-        MainActivity.config = new ESenseConfig(accRange,gyroRange,accLPF,gyroLPF);
-        MainActivity.samplingRate = Integer.parseInt(sampleRate);
+        Log.d(TAG,preferences.getString("deviceName",""));
+        ESenseConfig newConfig = new ESenseConfig(accRange,gyroRange,accLPF,gyroLPF);
+
+        Gson gson = new Gson();
+        String json = gson.toJson(newConfig);
+        editor.putString("eSenseConfig",json);
+        editor.commit();
 
         startActivity(intent);
+    }
+
+    private <T> int indexOf(T[] arr,T element) {
+        for (int i = 0; i < arr.length; i++) {
+            if (arr[i].equals(element)) {
+                return i;
+            }
+        }
+
+        return -1;
     }
 }

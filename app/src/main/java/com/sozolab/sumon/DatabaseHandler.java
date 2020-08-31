@@ -74,4 +74,10 @@ public class DatabaseHandler extends SQLiteOpenHelper {
         Collections.reverse(activityList);
         return activityList;
     }
+
+    public void clearAll() {
+        SQLiteDatabase db = this.getWritableDatabase();
+        String delete = "DELETE FROM " + TABLE_ACTIVITY;
+        db.execSQL(delete);
+    }
 }
