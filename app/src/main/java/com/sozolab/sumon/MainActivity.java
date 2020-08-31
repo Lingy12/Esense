@@ -147,7 +147,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         eSenseManager = new ESenseManager(deviceName, MainActivity.this.getApplicationContext(), connectionListenerManager);
         eSenseManager.registerSensorListener(sensorListenerManager,samplingRate);
 
-        Toast.makeText(this,String.format("Sampling rate is %dHz",samplingRate), Toast.LENGTH_SHORT).show();
+        //Toast.makeText(this,String.format("Sampling rate is %dHz",samplingRate), Toast.LENGTH_SHORT).show();
 
         if (!checkPermission()) {
             requestPermission();
