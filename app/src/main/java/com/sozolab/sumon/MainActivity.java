@@ -8,7 +8,9 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.os.Build;
+import android.os.CountDownTimer;
 import android.os.SystemClock;
+import android.support.design.widget.NavigationView;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.widget.DrawerLayout;
@@ -18,14 +20,18 @@ import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
 import android.widget.Chronometer;
+import android.widget.CompoundButton;
+import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.ProgressBar;
+import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.ToggleButton;
@@ -34,9 +40,13 @@ import com.google.gson.Gson;
 import com.sozolab.sumon.io.esense.esenselib.ESenseConfig;
 import com.sozolab.sumon.io.esense.esenselib.ESenseManager;
 
+import org.apache.poi.ss.formula.functions.Count;
+import org.w3c.dom.Text;
+
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
+import java.util.Timer;
 
 import static android.Manifest.permission.RECORD_AUDIO;
 import static android.Manifest.permission.ACCESS_FINE_LOCATION;
@@ -62,6 +72,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private Button walkButton;
     private Button stayButton;
     private Button speakWalkButton;
+    private Button addButton;
     private ListView activityListView;
     private Chronometer chronometer;
     private ToggleButton recordButton;
@@ -69,10 +80,15 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private TextView connectionTextView;
     private TextView deviceNameTextView;
     private TextView activityTextView;
+    private TextView timerShow;
+    private EditText newAct;
+    private ToggleButton timerSwitch;
     private ImageView statusImageView;
     private ProgressBar progressBar;
     private SharedPreferences sharedPreferences;
     private SharedPreferences.Editor sharedPrefEditor;
+    private NavigationView navigationView;
+    private CountDownTimer timer;
 
     Calendar currentTime;
     Activity activityObj;
@@ -80,6 +96,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     DatabaseHandler databaseHandler;
     SensorListenerManager sensorListenerManager;
     ConnectionListenerManager connectionListenerManager;
+
     private static final int PERMISSION_REQUEST_CODE = 200;
 
 
@@ -89,9 +106,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         setContentView(R.layout.activity_main);
 
         Log.d(TAG, "onCreate()");
+
         ActionBar actionBar = getSupportActionBar();
+        assert actionBar != null;
         actionBar.setDisplayShowHomeEnabled(true);
         actionBar.setIcon(R.mipmap.esense);
+        //actionBar.setDisplayOptions(ActionBar.DISPLAY_HOME_AS_UP);
 
         sharedPreferences = getSharedPreferences("eSenseSharedPrefs",Context.MODE_PRIVATE);
         sharedPrefEditor = sharedPreferences.edit();
@@ -115,6 +135,23 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         walkButton = (Button) findViewById(R.id.walkButton);
         stayButton = (Button) findViewById(R.id.stayButton);
         speakWalkButton = (Button) findViewById(R.id.speak_walk_button);
+        addButton = (Button) findViewById(R.id.new_act);
+        newAct = (EditText) findViewById(R.id.new_activity);
+
+        timerShow = (TextView) findViewById(R.id.timer_show);
+        timerSwitch = (ToggleButton) findViewById(R.id.timer_toggle);
+
+        timerShow.setText("Timer on");
+        timerSwitch.setChecked(true);
+        timerSwitch.setOnCheckedChangeListener((buttonView, isChecked) -> {
+            if (isChecked) {
+                timerShow.setText("Timer on");
+            } else {
+                timerShow.setText("Timer off");
+            }
+        });
+
+        createCountDownTimer();
 
         recordButton.setOnClickListener(this);
         connectButton.setOnClickListener(this);
@@ -125,6 +162,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         walkButton.setOnClickListener(this);
         stayButton.setOnClickListener(this);
         speakWalkButton.setOnClickListener(this);
+        addButton.setOnClickListener(this);
+
 
         statusImageView = (ImageView) findViewById(R.id.statusImage);
         connectionTextView = (TextView) findViewById(R.id.connectionTV);
@@ -133,10 +172,15 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         progressBar = (ProgressBar) findViewById(R.id.progressBar);
         chronometer = (Chronometer) findViewById(R.id.chronometer);
 
+
+        timerShow = (TextView) findViewById(R.id.timer_show);
+
         databaseHandler = new DatabaseHandler(this);
         activityListView = (ListView) findViewById(R.id.activityListView);
+
         ArrayList<Activity> activityHistory = databaseHandler.getAllActivities();
-        if(activityHistory.size() > 0){
+
+        if(activityHistory.size() > 0) {
             activityListView.setAdapter(new ActivityListAdapter(this, activityHistory));
         }
 
@@ -173,7 +217,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         this.moveTaskToBack(true);
     }
 
-
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
 
@@ -192,6 +235,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 return super.onOptionsItemSelected(item);
         }
     }
+
 
     @Override
     public void onClick(View v) {
@@ -250,80 +294,26 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 sharedPrefEditor.commit();
                 setActivityName();
                 break;
-
+            case R.id.timer_toggle:
+                timerSwitch.toggle();
+            case R.id.new_act:
+                showActivityCreation();
+                break;
             case R.id.recordButton:
+                if (!isESenseDeviceConnected()) {
+                    showNotConnectedAlertMessage();
+                    Log.d(TAG,"Not connected try to start");
+                    break;
+                }
+
                 if(recordButton.isChecked()) {
-
-                    if(activityName.equals("Activity")){
-                        recordButton.setChecked(false);
-                        showAlertMessage();
-                    }else{
-
-                        activityObj = new Activity();
-
-                        currentTime = Calendar.getInstance();
-                        int hour = currentTime.get(Calendar.HOUR_OF_DAY) ;
-                        int minute = currentTime.get(Calendar.MINUTE);
-                        int second = currentTime.get(Calendar.SECOND);
-
-                        chronometer.setBase(SystemClock.elapsedRealtime());
-                        chronometer.start();
-
-                        if(activityObj != null){
-                            String startTime = hour + " : " + minute + " : " + second;
-                            activityObj.setActivityName(activityName);
-                            activityObj.setStartTime(startTime);
-                        }
-
-                        sharedPrefEditor.putString("checked", "on");
-                        sharedPrefEditor.commit();
-                        recordButton.setBackgroundResource(R.drawable.stop);
-
-                        audioRecordServiceIntent.putExtra("activity", activityName);
-
-                        startDataCollection(activityName);
-                        startService(audioRecordServiceIntent);
+                    if (timerSwitch.isChecked()) {
+                        timer.start();
+                    } else {
+                        startCollection();
                     }
-
                 } else {
-
-                    currentTime = Calendar.getInstance();
-                    int hour = currentTime.get(Calendar.HOUR_OF_DAY) ;
-                    int minute = currentTime.get(Calendar.MINUTE);
-                    int second = currentTime.get(Calendar.SECOND);
-
-                    chronometer.stop();
-
-                    if(activityObj != null){
-                        String stopTime = hour + " : " + minute + " : " + second;
-                        String duration = chronometer.getText().toString();
-                        activityObj.setStopTime(stopTime);
-                        activityObj.setDuration(duration);
-                    }
-
-                    sharedPrefEditor.putString("checked", "off");
-                    sharedPrefEditor.commit();
-
-                    recordButton.setBackgroundResource(R.drawable.start);
-
-                    stopDataCollection();
-                    stopService(audioRecordServiceIntent);
-
-                    if(databaseHandler != null){
-                        if(activityObj != null){
-                            databaseHandler.addActivity(activityObj);
-                            ArrayList<Activity> activityHistory = databaseHandler.getAllActivities();
-                            activityListView.setAdapter(new ActivityListAdapter(this, activityHistory));
-
-                            for (Activity activity : activityHistory) {
-                                String activityLog = "Activity : " + activity.getActivityName() + " , Start Time : " + activity.getStartTime()
-                                        + " , Stop Time : " + activity.getStopTime() + " , Duration : " + activity.getDuration();
-                                Log.d(TAG, activityLog);
-                            }
-                        }
-                    }
-
-                    activityObj = null;
+                    stopCollection();
                 }
                 break;
         }
@@ -333,11 +323,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     protected void onResume() {
         super.onResume();
 
+
         progressBar.setVisibility(View.GONE);
 
         boolean isConnected = isESenseDeviceConnected();
         if(isConnected){
-            //Toast.makeText(this, "Connected", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "Connected", Toast.LENGTH_SHORT).show();
         }else{
             sharedPrefEditor.putString("status", "disconnected");
             sharedPrefEditor.commit();
@@ -346,7 +337,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             sharedPrefEditor.putString("activityName", activityName);
             sharedPrefEditor.commit();
 
-            //Toast.makeText(this, "Disconnected", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "Disconnected", Toast.LENGTH_SHORT).show();
         }
 
         String isChecked =  sharedPreferences.getString("checked", null);
@@ -491,6 +482,133 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 });
         AlertDialog alert = builder.create();
         alert.show();
+    }
+
+    private void createCountDownTimer() {
+        timer = new CountDownTimer(3000,1000) {
+            @Override
+            public void onTick(long millisUntilFinished) {
+                timerShow.setText("Start after: " + millisUntilFinished / 1000 + "seconds");
+            }
+
+            @Override
+            public void onFinish() {
+                startCollection();
+            }
+        };
+    }
+
+    public void startCollection() {
+        if(activityName.equals("Activity")){
+            recordButton.setChecked(false);
+            showAlertMessage();
+        }else{
+
+            activityObj = new Activity();
+
+            currentTime = Calendar.getInstance();
+            int hour = currentTime.get(Calendar.HOUR_OF_DAY) ;
+            int minute = currentTime.get(Calendar.MINUTE);
+            int second = currentTime.get(Calendar.SECOND);
+
+            chronometer.setBase(SystemClock.elapsedRealtime());
+            chronometer.start();
+
+            if(activityObj != null){
+                String startTime = hour + " : " + minute + " : " + second;
+                activityObj.setActivityName(activityName);
+                activityObj.setStartTime(startTime);
+            }
+
+            sharedPrefEditor.putString("checked", "on");
+            sharedPrefEditor.commit();
+            recordButton.setBackgroundResource(R.drawable.stop);
+
+            audioRecordServiceIntent.putExtra("activity", activityName);
+
+            startDataCollection(activityName);
+            startService(audioRecordServiceIntent);
+        }
+    }
+
+    public void stopCollection() {
+        currentTime = Calendar.getInstance();
+        int hour = currentTime.get(Calendar.HOUR_OF_DAY) ;
+        int minute = currentTime.get(Calendar.MINUTE);
+        int second = currentTime.get(Calendar.SECOND);
+
+        chronometer.stop();
+
+        if(activityObj != null){
+            String stopTime = hour + " : " + minute + " : " + second;
+            String duration = chronometer.getText().toString();
+            activityObj.setStopTime(stopTime);
+            activityObj.setDuration(duration);
+        }
+
+        sharedPrefEditor.putString("checked", "off");
+        sharedPrefEditor.commit();
+
+        recordButton.setBackgroundResource(R.drawable.start);
+
+        stopDataCollection();
+        stopService(audioRecordServiceIntent);
+
+        createCountDownTimer();
+
+        if(databaseHandler != null){
+            if(activityObj != null){
+                databaseHandler.addActivity(activityObj);
+                ArrayList<Activity> activityHistory = databaseHandler.getAllActivities();
+                activityListView.setAdapter(new ActivityListAdapter(this, activityHistory));
+
+                for (Activity activity : activityHistory) {
+                    String activityLog = "Activity : " + activity.getActivityName() + " , Start Time : " + activity.getStartTime()
+                            + " , Stop Time : " + activity.getStopTime() + " , Duration : " + activity.getDuration();
+                    Log.d(TAG, activityLog);
+                }
+            }
+        }
+
+        activityObj = null;
+    }
+
+    public void showNotConnectedAlertMessage() {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setMessage("Device not connected !")
+                .setCancelable(false)
+                .setPositiveButton("OK", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+
+                    }
+                });
+        AlertDialog alert = builder.create();
+        alert.show();
+    }
+
+    private void showActivityCreation() {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        View inflator = LayoutInflater.from(this).inflate(R.layout.add_act,null);
+
+        final EditText newAct = (EditText) inflator.findViewById(R.id.new_activity);
+
+        builder.setView(inflator)
+                .setPositiveButton("Save", (dialog, which) -> {
+                    activityName = newAct.getText().toString();
+                    sharedPrefEditor.putString("activityName", activityName);
+                    sharedPrefEditor.commit();
+                    setActivityName();
+                    dialog.cancel();
+                })
+                .setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        dialog.cancel();
+                    }
+                });
+        AlertDialog newActDialog = builder.create();
+        newActDialog.show();
     }
 
 }

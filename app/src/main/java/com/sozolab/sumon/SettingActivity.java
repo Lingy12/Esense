@@ -8,6 +8,7 @@ import android.os.Bundle;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
@@ -27,6 +28,7 @@ public class SettingActivity extends AppCompatActivity implements View.OnClickLi
     Spinner lpfAcc;
     Button saveButton;
     Button backButton;
+    ActionBar actionBar;
     private SharedPreferences preferences;
     private SharedPreferences.Editor editor;
 
@@ -38,6 +40,8 @@ public class SettingActivity extends AppCompatActivity implements View.OnClickLi
         preferences = getSharedPreferences("eSenseSharedPrefs", Context.MODE_PRIVATE);
         Log.d(TAG, preferences.getString("deviceName", ""));
         editor = preferences.edit();
+        actionBar = getSupportActionBar();
+        actionBar.setDisplayOptions(ActionBar.DISPLAY_HOME_AS_UP);
 
         deviceName = (EditText) findViewById(R.id.device_id);
         sampleRate = (EditText) findViewById(R.id.sensing_frq);
@@ -125,6 +129,16 @@ public class SettingActivity extends AppCompatActivity implements View.OnClickLi
         }
     }
 
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case android.R.id.home:
+                Intent intent = new Intent(this,MainActivity.class);
+                startActivity(intent);
+        }
+
+        return super.onOptionsItemSelected(item);
+    }
     private <T> int indexOf(T[] arr, T element) {
         for (int i = 0; i < arr.length; i++) {
             if (arr[i].equals(element)) {
