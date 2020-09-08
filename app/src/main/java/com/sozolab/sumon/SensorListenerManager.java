@@ -72,7 +72,7 @@ public class SensorListenerManager implements ESenseSensorListener {
      */
     @Override
     public void onSensorChanged(ESenseEvent evt) {
-        //Log.d(TAG, "onSensorChanged()");
+        Log.d(TAG, "onSensorChanged()");
 
         if (dataCollecting){
 
@@ -148,6 +148,7 @@ public class SensorListenerManager implements ESenseSensorListener {
 
         setColumnWidth(excelSheet);
         dataCollecting = true;
+        Log.i(TAG, "Listener start");
     }
 
     public void stopDataCollection(){
@@ -161,6 +162,7 @@ public class SensorListenerManager implements ESenseSensorListener {
             excelWorkbook.write(accelOutputStream);
 
             Log.w(TAG, "Writing excelFile : " + excelFile);
+            Log.w(TAG,"Write success");
         } catch (IOException e) {
             Log.w(TAG, "Error writing : " + excelFile, e);
         } catch (Exception e) {
@@ -174,6 +176,8 @@ public class SensorListenerManager implements ESenseSensorListener {
                 ex.printStackTrace();
             }
         }
+
+        Log.i(TAG,"listener stop");
     }
 
     public int getActivityIndex(String activity){

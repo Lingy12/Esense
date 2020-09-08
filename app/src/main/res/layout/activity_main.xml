@@ -283,15 +283,20 @@
 
     <TextView
         android:id="@+id/timer_show"
-        android:layout_width="124dp"
-        android:layout_height="49dp"
-        android:layout_marginEnd="12dp"
-        android:layout_marginBottom="80dp"
+        style="@style/selector"
+        android:layout_width="60dp"
+        android:layout_height="60dp"
+        android:layout_marginTop="24dp"
+        android:layout_marginEnd="52dp"
+        android:layout_marginBottom="84dp"
+        android:background="@drawable/custom_textfield"
         android:gravity="center"
         android:text="Timer"
         android:textSize="18sp"
+        android:textStyle="bold"
         app:layout_constraintBottom_toTopOf="@+id/timer_toggle"
-        app:layout_constraintEnd_toStartOf="@+id/activityListView" />
+        app:layout_constraintEnd_toStartOf="@+id/activityListView"
+        app:layout_constraintTop_toBottomOf="@+id/speak_walk_button" />
 
     <ToggleButton
         android:id="@+id/timer_toggle"

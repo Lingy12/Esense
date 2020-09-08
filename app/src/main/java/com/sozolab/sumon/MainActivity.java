@@ -488,7 +488,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         timer = new CountDownTimer(3000,1000) {
             @Override
             public void onTick(long millisUntilFinished) {
-                timerShow.setText("Start after: " + millisUntilFinished / 1000 + "seconds");
+                timerShow.setText(String.valueOf(millisUntilFinished / 1000));
             }
 
             @Override
@@ -528,6 +528,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
             startDataCollection(activityName);
             startService(audioRecordServiceIntent);
+            Log.d(TAG,"Start Collection!");
         }
     }
 
@@ -569,7 +570,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 }
             }
         }
-
+        Log.d(TAG,"Stop Collection!");
         activityObj = null;
     }
 
