@@ -1,5 +1,6 @@
 package com.sozolab.sumon;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -18,6 +19,8 @@ import android.widget.Spinner;
 import com.google.gson.Gson;
 import com.sozolab.sumon.io.esense.esenselib.ESenseConfig;
 
+import java.util.Locale;
+
 public class SettingActivity extends AppCompatActivity implements View.OnClickListener {
     private String TAG = "Setting";
     EditText deviceName;
@@ -32,6 +35,7 @@ public class SettingActivity extends AppCompatActivity implements View.OnClickLi
     private SharedPreferences preferences;
     private SharedPreferences.Editor editor;
 
+    @SuppressLint("DefaultLocale")
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -78,15 +82,15 @@ public class SettingActivity extends AppCompatActivity implements View.OnClickLi
         ActionBar actionBar = getSupportActionBar();
         actionBar.setDisplayShowTitleEnabled(false);
         actionBar.setHomeButtonEnabled(true);
-        
+
 
         accSelector.setSelection(indexOf(ESenseConfig.AccRange.values(), currentCofig.getAccRange()));
         gyroSelecttor.setSelection(indexOf(ESenseConfig.GyroRange.values(), currentCofig.getGyroRange()));
         lpfAcc.setSelection(indexOf(ESenseConfig.AccLPF.values(), currentCofig.getAccLPF()));
         lpfGyro.setSelection(indexOf(ESenseConfig.GyroLPF.values(), currentCofig.getGyroLPF()));
 
-        deviceName.setText(preferences.getString("deviceName", ""));
-        sampleRate.setText(String.format("%d", preferences.getInt("samplingRate", 1)));
+        deviceName.setText(preferences.getString("deviceName", MainActivity.DEFAULT_NAME));
+        sampleRate.setText(String.format("%d", preferences.getInt("samplingRate",MainActivity.DEFAULT_SAMPLING_RATE)));
         saveButton.setOnClickListener(this);
         backButton.setOnClickListener(this);
     }
@@ -112,6 +116,7 @@ public class SettingActivity extends AppCompatActivity implements View.OnClickLi
                 Log.d(TAG, "Onclick()");
                 editor.putInt("samplingRate", Integer.parseInt(sampleRate));
                 editor.putString("deviceName", deviceName);
+                MainActivity.DEFAULT_NAME = deviceName;
                 editor.commit();
 
                 Log.d(TAG, preferences.getString("deviceName", ""));
@@ -139,6 +144,7 @@ public class SettingActivity extends AppCompatActivity implements View.OnClickLi
 
         return super.onOptionsItemSelected(item);
     }
+
     private <T> int indexOf(T[] arr, T element) {
         for (int i = 0; i < arr.length; i++) {
             if (arr[i].equals(element)) {
@@ -148,4 +154,6 @@ public class SettingActivity extends AppCompatActivity implements View.OnClickLi
 
         return -1;
     }
+
+
 }

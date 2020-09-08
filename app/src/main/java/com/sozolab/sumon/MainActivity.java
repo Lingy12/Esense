@@ -54,10 +54,12 @@ import static android.Manifest.permission.WRITE_EXTERNAL_STORAGE;
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener {
     public static String DEFAULT_NAME = "eSense-0371";
-    private ESenseConfig config = new ESenseConfig();
+    public static ESenseConfig DEFAULT_CONFIG = new ESenseConfig();
+    public static int DEFAULT_SAMPLING_RATE = 10;
+    private ESenseConfig config = DEFAULT_CONFIG;
     private String deviceName = DEFAULT_NAME;
+    private int samplingRate = DEFAULT_SAMPLING_RATE;
     private ESenseManager eSenseManager;
-    private int samplingRate = 10;
     private String TAG = "Esense";
     private String activityName = "Activity";
     private int timeout = 30000;
@@ -113,21 +115,22 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         actionBar.setIcon(R.mipmap.esense);
         //actionBar.setDisplayOptions(ActionBar.DISPLAY_HOME_AS_UP);
 
-        sharedPreferences = getSharedPreferences("eSenseSharedPrefs",Context.MODE_PRIVATE);
+        sharedPreferences = getSharedPreferences("eSenseSharedPrefs", Context.MODE_PRIVATE);
         sharedPrefEditor = sharedPreferences.edit();
-        deviceName = sharedPreferences.getString("deviceName","eSense-0371");
-        samplingRate = sharedPreferences.getInt("samplingRate",10);
-        String parsedConfig = sharedPreferences.getString("eSenseConfig","");
+        deviceName = sharedPreferences.getString("deviceName", "eSense-0371");
+        samplingRate = sharedPreferences.getInt("samplingRate", 10);
+        String parsedConfig = sharedPreferences.getString("eSenseConfig", "");
 
         if (parsedConfig.equals("")) {
             config = new ESenseConfig(); //default configuration
         } else {
             Gson gson = new Gson();
-            config = gson.fromJson(parsedConfig,ESenseConfig.class);
+            config = gson.fromJson(parsedConfig, ESenseConfig.class);
+            Log.d(TAG, "New configuration applied");
         }
 
         recordButton = (ToggleButton) findViewById(R.id.recordButton);
-        connectButton =  (Button) findViewById(R.id.connectButton);
+        connectButton = (Button) findViewById(R.id.connectButton);
         headShakeButton = (Button) findViewById(R.id.headShakeButton);
         speakingButton = (Button) findViewById(R.id.speakingButton);
         noddingButton = (Button) findViewById(R.id.noddingButton);
@@ -180,17 +183,19 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         ArrayList<Activity> activityHistory = databaseHandler.getAllActivities();
 
-        if(activityHistory.size() > 0) {
+        if (activityHistory.size() > 0) {
             activityListView.setAdapter(new ActivityListAdapter(this, activityHistory));
         }
 
         audioRecordServiceIntent = new Intent(this, AudioRecordService.class);
-        sensorListenerManager = new SensorListenerManager(this,config);
+        sensorListenerManager = new SensorListenerManager(this, config);
         connectionListenerManager = new ConnectionListenerManager(this, sensorListenerManager,
                 connectionTextView, deviceNameTextView, statusImageView, progressBar, sharedPrefEditor);
         eSenseManager = new ESenseManager(deviceName, MainActivity.this.getApplicationContext(), connectionListenerManager);
-        eSenseManager.registerSensorListener(sensorListenerManager,samplingRate);
 
+        eSenseManager.registerSensorListener(sensorListenerManager, samplingRate);
+
+        connectEarables();
         //Toast.makeText(this,String.format("Sampling rate is %dHz",samplingRate), Toast.LENGTH_SHORT).show();
 
         if (!checkPermission()) {
@@ -198,6 +203,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         } else {
             Log.d(TAG, "Permission already granted..");
         }
+    }
+
+    private void disconnect() {
+        Log.d(TAG,"disconnect");
+        eSenseManager.disconnect();
     }
 
     public static boolean isESenseDeviceConnected() {
@@ -224,13 +234,16 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             case R.id.clear_menu:
                 Toast.makeText(this, "Clear history...", Toast.LENGTH_SHORT).show();
                 databaseHandler.clearAll();
+                FileHandler.deleteRecursive();
+                refreshActivityList();
                 return true;
             case R.id.reset_menu:
-                //Toast.makeText(this, "Reset connection..", Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, "Reset connection..", Toast.LENGTH_SHORT).show();
+                disconnect();
                 return true;
             case R.id.setting_menu:
+                disconnect();
                 showSetting();
-                this.finish();
             default:
                 return super.onOptionsItemSelected(item);
         }
@@ -240,7 +253,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     @Override
     public void onClick(View v) {
 
-        switch (v.getId()){
+        switch (v.getId()) {
             case R.id.connectButton:
                 progressBar.setVisibility(View.VISIBLE);
                 connectEarables();
@@ -302,11 +315,17 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             case R.id.recordButton:
                 if (!isESenseDeviceConnected()) {
                     showNotConnectedAlertMessage();
-                    Log.d(TAG,"Not connected try to start");
+                    Log.d(TAG, "Not connected try to start");
                     break;
                 }
 
-                if(recordButton.isChecked()) {
+
+                if (activityName.equals("Activity")) {
+                    recordButton.setChecked(false);
+                    showAlertMessage();
+                }
+
+                if (recordButton.isChecked()) {
                     if (timerSwitch.isChecked()) {
                         timer.start();
                     } else {
@@ -323,13 +342,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     protected void onResume() {
         super.onResume();
 
-
         progressBar.setVisibility(View.GONE);
 
         boolean isConnected = isESenseDeviceConnected();
-        if(isConnected){
-            Toast.makeText(this, "Connected", Toast.LENGTH_SHORT).show();
-        }else{
+
+        if (!isConnected) {
             sharedPrefEditor.putString("status", "disconnected");
             sharedPrefEditor.commit();
 
@@ -340,36 +357,37 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             Toast.makeText(this, "Disconnected", Toast.LENGTH_SHORT).show();
         }
 
-        String isChecked =  sharedPreferences.getString("checked", null);
-        String status =  sharedPreferences.getString("status", null);
-        String activity =  sharedPreferences.getString("activityName", null);
+        String isChecked = sharedPreferences.getString("checked", null);
+        String status = sharedPreferences.getString("status", null);
+        String activity = sharedPreferences.getString("activityName", null);
 
-        if(activity != null){
+        if (activity != null) {
             activityName = activity;
             setActivityName();
         }
 
-        if(status == null){
+        if (status == null) {
             connectionTextView.setText("Disconnected");
             deviceNameTextView.setText(deviceName);
             statusImageView.setImageResource(R.drawable.disconnected);
-        }else if(status.equals("connected")){
+            Toast.makeText(this, "Press connect to connect the device", Toast.LENGTH_SHORT).show();
+        } else if (status.equals("connected")) {
             connectionTextView.setText("Connected");
             deviceNameTextView.setText(deviceName);
             statusImageView.setImageResource(R.drawable.connected);
-        }else if(status.equals("disconnected")){
+        } else if (status.equals("disconnected")) {
             connectionTextView.setText("Disconnected");
             deviceNameTextView.setText(deviceName);
             statusImageView.setImageResource(R.drawable.disconnected);
         }
 
-        if(isChecked == null){
+        if (isChecked == null) {
             recordButton.setChecked(false);
             recordButton.setBackgroundResource(R.drawable.start);
-        }else if(isChecked.equals("on")){
+        } else if (isChecked.equals("on")) {
             recordButton.setChecked(true);
             recordButton.setBackgroundResource(R.drawable.stop);
-        }else if(isChecked.equals("off")){
+        } else if (isChecked.equals("off")) {
             recordButton.setChecked(false);
             recordButton.setBackgroundResource(R.drawable.start);
         }
@@ -389,19 +407,19 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         Log.d(TAG, "onPause()");
     }
 
-    public void setActivityName(){
+    public void setActivityName() {
         activityTextView.setText(activityName);
     }
 
-    public void connectEarables(){
+    public void connectEarables() {
         eSenseManager.connect(timeout);
     }
 
-    public void startDataCollection(String activity){
+    public void startDataCollection(String activity) {
         sensorListenerManager.startDataCollection(activity);
     }
 
-    public void stopDataCollection(){
+    public void stopDataCollection() {
         sensorListenerManager.stopDataCollection();
     }
 
@@ -431,7 +449,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     boolean storageAccepted = grantResults[1] == PackageManager.PERMISSION_GRANTED;
                     boolean recordAccepted = grantResults[2] == PackageManager.PERMISSION_GRANTED;
 
-                    if (locationAccepted && storageAccepted && recordAccepted){
+                    if (locationAccepted && storageAccepted && recordAccepted) {
                         Log.d(TAG, "Permission granted");
                     } else {
                         Log.d(TAG, "Permission denied");
@@ -467,11 +485,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     private void showSetting() {
-        Intent intent = new Intent(this,SettingActivity.class);
+        Intent intent = new Intent(this, SettingActivity.class);
         startActivity(intent);
     }
 
-    public void showAlertMessage(){
+    public void showAlertMessage() {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setMessage("Please select an activityName !")
                 .setCancelable(false)
@@ -485,7 +503,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     private void createCountDownTimer() {
-        timer = new CountDownTimer(3000,1000) {
+        timer = new CountDownTimer(3000, 1000) {
             @Override
             public void onTick(long millisUntilFinished) {
                 timerShow.setText(String.valueOf(millisUntilFinished / 1000));
@@ -493,54 +511,49 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
             @Override
             public void onFinish() {
+                timerShow.setText("Start!");
                 startCollection();
             }
         };
     }
 
     public void startCollection() {
-        if(activityName.equals("Activity")){
-            recordButton.setChecked(false);
-            showAlertMessage();
-        }else{
+        activityObj = new Activity();
 
-            activityObj = new Activity();
+        currentTime = Calendar.getInstance();
+        int hour = currentTime.get(Calendar.HOUR_OF_DAY);
+        int minute = currentTime.get(Calendar.MINUTE);
+        int second = currentTime.get(Calendar.SECOND);
 
-            currentTime = Calendar.getInstance();
-            int hour = currentTime.get(Calendar.HOUR_OF_DAY) ;
-            int minute = currentTime.get(Calendar.MINUTE);
-            int second = currentTime.get(Calendar.SECOND);
+        chronometer.setBase(SystemClock.elapsedRealtime());
+        chronometer.start();
 
-            chronometer.setBase(SystemClock.elapsedRealtime());
-            chronometer.start();
-
-            if(activityObj != null){
-                String startTime = hour + " : " + minute + " : " + second;
-                activityObj.setActivityName(activityName);
-                activityObj.setStartTime(startTime);
-            }
-
-            sharedPrefEditor.putString("checked", "on");
-            sharedPrefEditor.commit();
-            recordButton.setBackgroundResource(R.drawable.stop);
-
-            audioRecordServiceIntent.putExtra("activity", activityName);
-
-            startDataCollection(activityName);
-            startService(audioRecordServiceIntent);
-            Log.d(TAG,"Start Collection!");
+        if (activityObj != null) {
+            String startTime = hour + " : " + minute + " : " + second;
+            activityObj.setActivityName(activityName);
+            activityObj.setStartTime(startTime);
         }
+
+        sharedPrefEditor.putString("checked", "on");
+        sharedPrefEditor.commit();
+        recordButton.setBackgroundResource(R.drawable.stop);
+
+        audioRecordServiceIntent.putExtra("activity", activityName);
+
+        startDataCollection(activityName);
+        startService(audioRecordServiceIntent);
+        Log.d(TAG, "Start Collection!");
     }
 
     public void stopCollection() {
         currentTime = Calendar.getInstance();
-        int hour = currentTime.get(Calendar.HOUR_OF_DAY) ;
+        int hour = currentTime.get(Calendar.HOUR_OF_DAY);
         int minute = currentTime.get(Calendar.MINUTE);
         int second = currentTime.get(Calendar.SECOND);
 
         chronometer.stop();
 
-        if(activityObj != null){
+        if (activityObj != null) {
             String stopTime = hour + " : " + minute + " : " + second;
             String duration = chronometer.getText().toString();
             activityObj.setStopTime(stopTime);
@@ -555,23 +568,28 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         stopDataCollection();
         stopService(audioRecordServiceIntent);
 
+        if (activityObj != null) {
+            databaseHandler.addActivity(activityObj);
+        }
+
         createCountDownTimer();
 
-        if(databaseHandler != null){
-            if(activityObj != null){
-                databaseHandler.addActivity(activityObj);
-                ArrayList<Activity> activityHistory = databaseHandler.getAllActivities();
-                activityListView.setAdapter(new ActivityListAdapter(this, activityHistory));
+        refreshActivityList();
+        Log.d(TAG, "Stop Collection!");
+        activityObj = null;
+    }
 
-                for (Activity activity : activityHistory) {
-                    String activityLog = "Activity : " + activity.getActivityName() + " , Start Time : " + activity.getStartTime()
-                            + " , Stop Time : " + activity.getStopTime() + " , Duration : " + activity.getDuration();
-                    Log.d(TAG, activityLog);
-                }
+    public void refreshActivityList() {
+        if (databaseHandler != null) {
+            ArrayList<Activity> activityHistory = databaseHandler.getAllActivities();
+            activityListView.setAdapter(new ActivityListAdapter(this, activityHistory));
+
+            for (Activity activity : activityHistory) {
+                String activityLog = "Activity : " + activity.getActivityName() + " , Start Time : " + activity.getStartTime()
+                        + " , Stop Time : " + activity.getStopTime() + " , Duration : " + activity.getDuration();
+                Log.d(TAG, activityLog);
             }
         }
-        Log.d(TAG,"Stop Collection!");
-        activityObj = null;
     }
 
     public void showNotConnectedAlertMessage() {
@@ -590,7 +608,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     private void showActivityCreation() {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        View inflator = LayoutInflater.from(this).inflate(R.layout.add_act,null);
+        View inflator = LayoutInflater.from(this).inflate(R.layout.add_act, null);
 
         final EditText newAct = (EditText) inflator.findViewById(R.id.new_activity);
 
@@ -611,5 +629,4 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         AlertDialog newActDialog = builder.create();
         newActDialog.show();
     }
-
 }

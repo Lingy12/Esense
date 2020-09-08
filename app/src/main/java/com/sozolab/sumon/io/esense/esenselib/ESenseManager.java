@@ -368,6 +368,7 @@ public class ESenseManager {
      *         <code>false</code> otherwise
      */
     public boolean isConnected() {
+
         return (mBluetoothManager.getConnectionState(mDevice, BluetoothProfile.GATT) == BluetoothProfile.STATE_CONNECTED);
     }
 
@@ -378,6 +379,7 @@ public class ESenseManager {
      *         <code>false</code> otherwise
      */
     public boolean disconnect(){
+        Log.v(TAG,"disconnect");
         if(isConnected()) {
             mGatt.disconnect();
             return true;
@@ -440,6 +442,7 @@ public class ESenseManager {
                 }
             }
         }).start();
+
     }
 
     /**
