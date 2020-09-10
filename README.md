@@ -3,8 +3,7 @@
 This is an Android application. The app establishes connection with a Bluetooth Low Energy (BLE) earble device named [eSense](http://www.esense.io/). The device is developed by NOKIA Bell Labs Cambridge. <br/>
 ![](images/esensedevice.png)
 <br/>The device contains sensor which provides accelerometer and gyroscope data. From this data hand and mouth related activities like eating, swallowing, speaking, head shaking etc. can be recognized by machine learning algorithms like CNN, LSTM.
-
-# IDE
+#IDE
 
 - **Android Studio**
 
