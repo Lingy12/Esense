@@ -25,6 +25,7 @@ public class SensorListenerManager implements ESenseSensorListener {
 
     private final String TAG = "SensorListenerManager";
     private long timeStamp;
+    private long cacheStamp = 0;
     private double[] accel;
     private double[] gyro;
     private boolean dataCollecting;
@@ -80,6 +81,13 @@ public class SensorListenerManager implements ESenseSensorListener {
                 rowIndex++;
 
                 timeStamp = evt.getTimestamp();
+
+                if (timeStamp == cacheStamp) {
+                    Log.e(TAG, "Time stamp error");
+                }
+
+                cacheStamp = timeStamp;
+
                 accel = evt.convertAccToG(eSenseConfig);
                 gyro = evt.convertGyroToDegPerSecond(eSenseConfig);
 

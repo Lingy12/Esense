@@ -113,14 +113,15 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         assert actionBar != null;
         actionBar.setDisplayShowHomeEnabled(true);
         actionBar.setIcon(R.mipmap.esense);
-        //actionBar.setDisplayOptions(ActionBar.DISPLAY_HOME_AS_UP);
 
+        //Update extract the configuration from preference book
         sharedPreferences = getSharedPreferences("eSenseSharedPrefs", Context.MODE_PRIVATE);
         sharedPrefEditor = sharedPreferences.edit();
         deviceName = sharedPreferences.getString("deviceName", "eSense-0371");
         samplingRate = sharedPreferences.getInt("samplingRate", 10);
         String parsedConfig = sharedPreferences.getString("eSenseConfig", "");
 
+        //Parse the Configuration
         assert parsedConfig != null;
         if (parsedConfig.equals("")) {
             config = new ESenseConfig(); //default configuration
@@ -128,8 +129,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             Gson gson = new Gson();
             config = gson.fromJson(parsedConfig, ESenseConfig.class);
             Log.d(TAG, "New configuration applied");
-            Log.d(TAG, String.format("Current config: AccLPF: %s, AccRange: %s, GyroLPF: %s, GyroRange: %s",config.getAccLPF(),config.getAccRange(), config.getGyroLPF(),config.getGyroRange()));
-            Log.d(TAG, "Sampling rate: " + samplingRate);
         }
 
         recordButton = (ToggleButton) findViewById(R.id.recordButton);
@@ -146,6 +145,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         timerShow = (TextView) findViewById(R.id.timer_show);
         timerSwitch = (ToggleButton) findViewById(R.id.timer_toggle);
+
 
         timerShow.setText("Timer on");
         timerSwitch.setChecked(true);
@@ -334,6 +334,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     } else {
                         startCollection();
                     }
+
+                    showCurrentSetting();
                 } else {
                     stopCollection();
                 }
@@ -607,6 +609,17 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 });
         AlertDialog alert = builder.create();
         alert.show();
+    }
+
+    private void showCurrentSetting() {
+
+        if (eSenseManager.getSensorConfig()) {
+            String builder = String.format("Current config: AccLPF: %s, AccRange: %s, GyroLPF: %s, GyroRange: %s", config.getAccLPF(), config.getAccRange(), config.getGyroLPF(), config.getGyroRange()) +
+                    "Sampling rate: " + samplingRate;
+            Toast.makeText(this, builder,Toast.LENGTH_LONG).show();
+        }
+
+
     }
 
     private void showActivityCreation() {
