@@ -121,12 +121,15 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         samplingRate = sharedPreferences.getInt("samplingRate", 10);
         String parsedConfig = sharedPreferences.getString("eSenseConfig", "");
 
+        assert parsedConfig != null;
         if (parsedConfig.equals("")) {
             config = new ESenseConfig(); //default configuration
         } else {
             Gson gson = new Gson();
             config = gson.fromJson(parsedConfig, ESenseConfig.class);
             Log.d(TAG, "New configuration applied");
+            Log.d(TAG, String.format("Current config: AccLPF: %s, AccRange: %s, GyroLPF: %s, GyroRange: %s",config.getAccLPF(),config.getAccRange(), config.getGyroLPF(),config.getGyroRange()));
+            Log.d(TAG, "Sampling rate: " + samplingRate);
         }
 
         recordButton = (ToggleButton) findViewById(R.id.recordButton);
