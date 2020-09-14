@@ -47,10 +47,9 @@ public class SettingActivity extends AppCompatActivity implements View.OnClickLi
         actionBar = getSupportActionBar();
         actionBar.setDisplayOptions(ActionBar.DISPLAY_HOME_AS_UP);
 
+        //Import UI element
         deviceName = (EditText) findViewById(R.id.device_id);
         sampleRate = (EditText) findViewById(R.id.sensing_frq);
-//        accSelector = (EditText) findViewById(R.id.acc_selector);
-//        gyroSelecttor = (EditText) findViewById(R.id.hyro_selector);
         saveButton = (Button) findViewById(R.id.save_button);
         accSelector = (Spinner) findViewById(R.id.acc_g);
         gyroSelecttor = (Spinner) findViewById(R.id.gyro_deg);
@@ -58,6 +57,7 @@ public class SettingActivity extends AppCompatActivity implements View.OnClickLi
         lpfGyro = (Spinner) findViewById(R.id.gyro_lpf);
         backButton = (Button) findViewById(R.id.back_button);
 
+        // Set up spinner
         ArrayAdapter<ESenseConfig.AccRange> accAdapter = new ArrayAdapter(this, android.R.layout.simple_spinner_item, ESenseConfig.AccRange.values());
         ArrayAdapter<ESenseConfig.AccLPF> lpfaAdapter = new ArrayAdapter(this, android.R.layout.simple_spinner_item, ESenseConfig.AccLPF.values());
         ArrayAdapter<ESenseConfig.GyroLPF> lpfgAdpter = new ArrayAdapter(this, android.R.layout.simple_spinner_item, ESenseConfig.GyroLPF.values());
@@ -68,6 +68,7 @@ public class SettingActivity extends AppCompatActivity implements View.OnClickLi
         setAdpter(lpfAcc, lpfaAdapter);
         setAdpter(lpfGyro, lpfgAdpter);
 
+        // Read current configuration
         String currentJson = preferences.getString("eSenseConfig", "");
         ESenseConfig currentCofig;
 
@@ -83,7 +84,7 @@ public class SettingActivity extends AppCompatActivity implements View.OnClickLi
         actionBar.setDisplayShowTitleEnabled(false);
         actionBar.setHomeButtonEnabled(true);
 
-
+        //Set up the UI element from existing configuration
         accSelector.setSelection(indexOf(ESenseConfig.AccRange.values(), currentCofig.getAccRange()));
         gyroSelecttor.setSelection(indexOf(ESenseConfig.GyroRange.values(), currentCofig.getGyroRange()));
         lpfAcc.setSelection(indexOf(ESenseConfig.AccLPF.values(), currentCofig.getAccLPF()));
@@ -106,6 +107,7 @@ public class SettingActivity extends AppCompatActivity implements View.OnClickLi
         switch (v.getId()) {
             case R.id.save_button:
 
+                // Change the setting and property
                 String deviceName = this.deviceName.getText().toString();
                 String sampleRate = this.sampleRate.getText().toString();
                 ESenseConfig.GyroLPF gyroLPF = (ESenseConfig.GyroLPF) this.lpfGyro.getSelectedItem();
@@ -113,6 +115,7 @@ public class SettingActivity extends AppCompatActivity implements View.OnClickLi
                 ESenseConfig.AccRange accRange = (ESenseConfig.AccRange) this.accSelector.getSelectedItem();
                 ESenseConfig.GyroRange gyroRange = (ESenseConfig.GyroRange) this.gyroSelecttor.getSelectedItem();
 
+                // Put sampling rate and device name to preference book
                 Log.d(TAG, "Onclick()");
                 editor.putInt("samplingRate", Integer.parseInt(sampleRate));
                 editor.putString("deviceName", deviceName);
@@ -120,8 +123,9 @@ public class SettingActivity extends AppCompatActivity implements View.OnClickLi
                 editor.commit();
 
                 Log.d(TAG, preferences.getString("deviceName", ""));
-                ESenseConfig newConfig = new ESenseConfig(accRange, gyroRange, accLPF, gyroLPF);
+                ESenseConfig newConfig = new ESenseConfig(accRange, gyroRange, accLPF, gyroLPF);//create new Config
 
+                //Store the config in jason format
                 Gson gson = new Gson();
                 String json = gson.toJson(newConfig);
                 editor.putString("eSenseConfig", json);

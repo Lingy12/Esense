@@ -120,4 +120,7 @@ public class ConnectionListenerManager implements ESenseConnectionListener {
 
     }
 
+    public void setSamplingRate(int samplingRate) {
+        this.samplingRate = samplingRate;
+    }
 }

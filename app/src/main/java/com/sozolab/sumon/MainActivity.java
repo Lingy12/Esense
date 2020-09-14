@@ -38,6 +38,8 @@ import android.widget.ToggleButton;
 
 import com.google.gson.Gson;
 import com.sozolab.sumon.io.esense.esenselib.ESenseConfig;
+import com.sozolab.sumon.io.esense.esenselib.ESenseConnectionListener;
+import com.sozolab.sumon.io.esense.esenselib.ESenseEventListener;
 import com.sozolab.sumon.io.esense.esenselib.ESenseManager;
 
 import org.apache.poi.ss.formula.functions.Count;
@@ -64,8 +66,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private String activityName = "Activity";
     private int timeout = 30000;
 
-    private DrawerLayout drawerLayout;
-    private ActionBarDrawerToggle drawerToggle;
     private Button connectButton;
     private Button headShakeButton;
     private Button speakingButton;
@@ -89,7 +89,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private ProgressBar progressBar;
     private SharedPreferences sharedPreferences;
     private SharedPreferences.Editor sharedPrefEditor;
-    private NavigationView navigationView;
     private CountDownTimer timer;
 
     Calendar currentTime;
@@ -117,8 +116,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         //Update extract the configuration from preference book
         sharedPreferences = getSharedPreferences("eSenseSharedPrefs", Context.MODE_PRIVATE);
         sharedPrefEditor = sharedPreferences.edit();
+        samplingRate = sharedPreferences.getInt("samplingRate", 50);
         deviceName = sharedPreferences.getString("deviceName", "eSense-0371");
-        samplingRate = sharedPreferences.getInt("samplingRate", 10);
         String parsedConfig = sharedPreferences.getString("eSenseConfig", "");
 
         //Parse the Configuration
@@ -146,7 +145,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         timerShow = (TextView) findViewById(R.id.timer_show);
         timerSwitch = (ToggleButton) findViewById(R.id.timer_toggle);
 
-
+        //Set up the timer
         timerShow.setText("Timer on");
         timerSwitch.setChecked(true);
         timerSwitch.setOnCheckedChangeListener((buttonView, isChecked) -> {
@@ -194,12 +193,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         sensorListenerManager = new SensorListenerManager(this, config);
         connectionListenerManager = new ConnectionListenerManager(this, sensorListenerManager,
                 connectionTextView, deviceNameTextView, statusImageView, progressBar, sharedPrefEditor);
+        connectionListenerManager.setSamplingRate(samplingRate);
         eSenseManager = new ESenseManager(deviceName, MainActivity.this.getApplicationContext(), connectionListenerManager);
 
-        eSenseManager.registerSensorListener(sensorListenerManager, samplingRate);
-
         connectEarables();
-        //Toast.makeText(this,String.format("Sampling rate is %dHz",samplingRate), Toast.LENGTH_SHORT).show();
 
         if (!checkPermission()) {
             requestPermission();
@@ -235,16 +232,19 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         switch (item.getItemId()) {
             case R.id.clear_menu:
+                // Clear all the existing history
                 Toast.makeText(this, "Clear history...", Toast.LENGTH_SHORT).show();
                 databaseHandler.clearAll();
                 FileHandler.deleteRecursive();
                 refreshActivityList();
                 return true;
             case R.id.reset_menu:
+                // Disconnect the device to reset
                 Toast.makeText(this, "Reset connection..", Toast.LENGTH_SHORT).show();
                 disconnect();
                 return true;
             case R.id.setting_menu:
+                // Go to setting
                 disconnect();
                 showSetting();
             default:
@@ -622,6 +622,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     }
 
+    // Show the activity creation window
     private void showActivityCreation() {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         View inflator = LayoutInflater.from(this).inflate(R.layout.add_act, null);

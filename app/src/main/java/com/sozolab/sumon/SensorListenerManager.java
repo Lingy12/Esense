@@ -84,6 +84,7 @@ public class SensorListenerManager implements ESenseSensorListener {
 
                 if (timeStamp == cacheStamp) {
                     Log.e(TAG, "Time stamp error");
+                    return;
                 }
 
                 cacheStamp = timeStamp;

@@ -320,7 +320,7 @@ public class ESenseManager {
 
         mSensorListener = listener;
         enableNotification(SENSOR_CHARACTERISTIC,true);
-        Log.d(TAG, "Sampling is started successfully");
+        Log.d(TAG, "Sampling is started successfully with rate " + samplingRate);
         return SamplingStatus.STARTED;
     }
 
