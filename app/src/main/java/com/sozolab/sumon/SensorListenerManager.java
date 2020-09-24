@@ -40,17 +40,19 @@ public class SensorListenerManager implements ESenseSensorListener {
     ESenseConfig eSenseConfig;
     String dataDirPath;
     String activityName;
-    int activityIndex;
+    boolean isStart;
+    int samplingRate;
 
     public SensorListenerManager(Context context){
         this.context = context;
         eSenseConfig = new ESenseConfig();
         rowIndex = 1;
-        activityIndex = -1;
         activityName = "";
         sheetName = "";
         excelSheet = null;
         excelFile = null;
+        samplingRate = ConnectionListenerManager.getSamplingRate();
+
         dataDirPath = Environment.getExternalStorageDirectory().getAbsolutePath() + File.separator + "ESenseData" + File.separator;
         Log.d(TAG, "Sensor Data Path : " + dataDirPath);
     }
@@ -80,11 +82,17 @@ public class SensorListenerManager implements ESenseSensorListener {
             if(excelSheet != null){
                 rowIndex++;
 
-                timeStamp = evt.getTimestamp();
+                if (isStart) {
+                    timeStamp = evt.getTimestamp();
+                    isStart = false;
+                } else {
+                    timeStamp = (long) (cacheStamp + (1.0 / samplingRate) * 1000 - 1);
+                }
+//                timeStamp = evt.getTimestamp();
 
                 if (timeStamp == cacheStamp) {
                     Log.e(TAG, "Time stamp error");
-                    return;
+//                    return;
                 }
 
                 cacheStamp = timeStamp;
@@ -116,12 +124,9 @@ public class SensorListenerManager implements ESenseSensorListener {
                 dataCell.setCellValue(gyro[2]);
 
                 dataCell = dataRow.createCell(7);
-                dataCell.setCellValue(String.valueOf(activityIndex));
-
-                dataCell = dataRow.createCell(8);
                 dataCell.setCellValue(activityName);
 
-                String sensorData = "Index : " + activityIndex + " Activity : " + activityName + " Row : " + rowIndex + " Time : " + timeStamp
+                String sensorData = " Activity : " + activityName + " Row : " + rowIndex + " Time : " + timeStamp
                         + " accel : " + accel[0] + " " + accel[1] + " " + accel[2] + " gyro : " + gyro[0] + " " + gyro[1] + " " + gyro[2];
                 Log.d(TAG, sensorData);
             }
@@ -141,14 +146,16 @@ public class SensorListenerManager implements ESenseSensorListener {
     }
 
     public void startDataCollection(String activity) {
-
-        this.activityName = activity;
-        activityIndex = getActivityIndex(activityName);
+        isStart = true;
+        samplingRate = ConnectionListenerManager.getSamplingRate();
+        
+        Log.i(TAG, String.format("Current rate %d",samplingRate));
+        this.activityName = activity; //activity is built in MainActivity
 
         SimpleDateFormat simpleDateFormat = new SimpleDateFormat("dd_MM_yyyy_hh_mm_ss_a", Locale.getDefault());
         String currentDateTime = simpleDateFormat.format(new Date());
 
-        sensorDataFile = activityName + "_" + currentDateTime + ".xls";
+        sensorDataFile = activityName + "_" + currentDateTime + ".csv";
         excelFile = new File(dataDirPath, sensorDataFile);
 
         sheetName = activityName;
@@ -187,33 +194,6 @@ public class SensorListenerManager implements ESenseSensorListener {
         }
 
         Log.i(TAG,"listener stop");
-    }
-
-    public int getActivityIndex(String activity){
-        int index = -1;
-
-        switch (activity){
-            case "Head Shake":
-                index = 1;
-                break;
-            case "Speaking":
-                index = 2;
-                break;
-            case "Nodding":
-                index = 3;
-                break;
-            case "Eating":
-                index = 4;
-                break;
-            case "Walking":
-                index = 5;
-                break;
-            case "Staying":
-                index = 6;
-                break;
-        }
-
-        return index;
     }
 
 }

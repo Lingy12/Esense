@@ -2,6 +2,7 @@
 <android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/main"
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
@@ -73,70 +74,10 @@
         android:layout_height="wrap_content"
         android:layout_marginStart="8dp"
         android:layout_marginTop="8dp"
-        android:layout_marginEnd="8dp"
-        android:text="Activities"
+        android:text="Activity"
         android:textColor="#000000"
         android:textSize="14sp"
         android:textStyle="bold"
-        app:layout_constraintEnd_toEndOf="@+id/headShakeButton"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/view4" />
-
-    <Button
-        android:id="@+id/speakingButton"
-        android:layout_width="110dp"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="8dp"
-        android:layout_marginTop="8dp"
-        android:background="@drawable/custom_button"
-        android:drawableLeft="@drawable/speaking"
-        android:drawablePadding="8dp"
-        android:text="Speaking"
-        android:textAllCaps="false"
-        android:textSize="14sp"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/headShakeButton" />
-
-    <Button
-        android:id="@+id/eatingButton"
-        android:layout_width="110dp"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="8dp"
-        android:layout_marginTop="8dp"
-        android:background="@drawable/custom_button"
-        android:drawableLeft="@drawable/eat"
-        android:drawablePadding="8dp"
-        android:text="Eating"
-        android:textAllCaps="false"
-        android:textSize="14sp"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/noddingButton" />
-
-    <Button
-        android:id="@+id/noddingButton"
-        android:layout_width="110dp"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="8dp"
-        android:layout_marginTop="8dp"
-        android:background="@drawable/custom_button"
-        android:drawableLeft="@drawable/nodding"
-        android:text="Nodding"
-        android:textAllCaps="false"
-        android:textSize="14sp"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/speakingButton" />
-
-    <Button
-        android:id="@+id/headShakeButton"
-        android:layout_width="110dp"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="8dp"
-        android:layout_marginTop="32dp"
-        android:background="@drawable/custom_button"
-        android:drawableLeft="@drawable/headshake"
-        android:text="Head Shake"
-        android:textAllCaps="false"
-        android:textSize="14sp"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/view4" />
 
@@ -153,48 +94,6 @@
         app:layout_constraintHorizontal_bias="0.032"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/view4" />
-
-    <Button
-        android:id="@+id/stayButton"
-        android:layout_width="110dp"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="8dp"
-        android:layout_marginTop="8dp"
-        android:background="@drawable/custom_button"
-        android:drawableLeft="@drawable/stay"
-        android:text="Stay"
-        android:textAllCaps="false"
-        android:textSize="14sp"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/walkButton" />
-
-    <Button
-        android:id="@+id/speak_walk_button"
-        android:layout_width="110dp"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="8dp"
-        android:layout_marginTop="8dp"
-        android:background="@drawable/custom_button"
-        android:drawableLeft="@drawable/walk"
-        android:text="Speak and Walk"
-        android:textAllCaps="false"
-        android:textSize="14sp"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/stayButton" />
-
-    <Button
-        android:id="@+id/walkButton"
-        android:layout_width="110dp"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="8dp"
-        android:layout_marginTop="8dp"
-        android:background="@drawable/custom_button"
-        android:drawableLeft="@drawable/walk"
-        android:text="Walking"
-        android:textAllCaps="false"
-        android:textSize="14sp"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/eatingButton" />
 
     <TextView
         android:id="@+id/activityTV"
@@ -215,39 +114,35 @@
         android:id="@+id/chronometer"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_marginTop="5dp"
         android:layout_marginEnd="40dp"
-        android:layout_marginBottom="16dp"
         android:textColor="#000000"
         android:textSize="18sp"
         android:textStyle="bold"
-        app:layout_constraintBottom_toBottomOf="@+id/speakingButton"
-        app:layout_constraintEnd_toEndOf="parent" />
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/recordButton" />
 
     <TextView
         android:id="@+id/activityhistoryTV"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginStart="8dp"
-        android:layout_marginTop="8dp"
+        android:layout_marginTop="19dp"
         android:layout_marginEnd="8dp"
         android:text="Activity History"
         android:textColor="#000000"
         android:textSize="14sp"
         android:textStyle="bold"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toEndOf="@+id/noddingButton"
-        app:layout_constraintTop_toBottomOf="@+id/speakingButton" />
+        app:layout_constraintTop_toBottomOf="@+id/chronometer" />
 
     <ListView
         android:id="@+id/activityListView"
         android:layout_width="250dp"
         android:layout_height="0dp"
-        android:layout_marginStart="44dp"
         android:layout_marginTop="8dp"
         android:layout_marginBottom="8dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toEndOf="@+id/noddingButton"
         app:layout_constraintTop_toBottomOf="@+id/activityhistoryTV" />
 
     <ToggleButton
@@ -286,7 +181,6 @@
         style="@style/selector"
         android:layout_width="60dp"
         android:layout_height="60dp"
-        android:layout_marginTop="24dp"
         android:layout_marginEnd="52dp"
         android:layout_marginBottom="84dp"
         android:background="@drawable/custom_textfield"
@@ -295,8 +189,7 @@
         android:textSize="18sp"
         android:textStyle="bold"
         app:layout_constraintBottom_toTopOf="@+id/timer_toggle"
-        app:layout_constraintEnd_toStartOf="@+id/activityListView"
-        app:layout_constraintTop_toBottomOf="@+id/speak_walk_button" />
+        app:layout_constraintEnd_toStartOf="@+id/activityListView" />
 
     <ToggleButton
         android:id="@+id/timer_toggle"
@@ -306,5 +199,42 @@
         android:layout_marginBottom="32dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toStartOf="@+id/activityListView" />
+
+    <Spinner
+        android:id="@+id/position_selector"
+        android:layout_width="120dp"
+        android:layout_height="47dp"
+        android:layout_marginStart="12dp"
+        android:layout_marginTop="36dp"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/mask_switch" />
+
+    <Switch
+        android:id="@+id/mask_switch"
+        android:layout_width="113dp"
+        android:layout_height="45dp"
+        android:layout_marginStart="12dp"
+        android:layout_marginTop="64dp"
+        android:text="Mask?"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/progressBar" />
+
+    <Spinner
+        android:id="@+id/pattern_selector"
+        android:layout_width="118dp"
+        android:layout_height="47dp"
+        android:layout_marginStart="8dp"
+        android:layout_marginTop="20dp"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/position_selector" />
+
+    <Spinner
+        android:id="@+id/hand_selector"
+        android:layout_width="120dp"
+        android:layout_height="48dp"
+        android:layout_marginStart="8dp"
+        android:layout_marginTop="16dp"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/pattern_selector" />
 
 </android.support.constraint.ConstraintLayout>
