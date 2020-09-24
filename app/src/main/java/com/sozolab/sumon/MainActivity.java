@@ -1,5 +1,6 @@
 package com.sozolab.sumon;
 
+import android.annotation.SuppressLint;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothHeadset;
 import android.content.Context;
@@ -24,6 +25,7 @@ import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.Chronometer;
 import android.widget.CompoundButton;
@@ -31,6 +33,7 @@ import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.ProgressBar;
+import android.widget.Spinner;
 import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -66,15 +69,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private String activityName = "Activity";
     private int timeout = 30000;
 
-    private Button connectButton;
-    private Button headShakeButton;
-    private Button speakingButton;
-    private Button noddingButton;
-    private Button eatingButton;
-    private Button walkButton;
-    private Button stayButton;
-    private Button speakWalkButton;
-    private Button addButton;
     private ListView activityListView;
     private Chronometer chronometer;
     private ToggleButton recordButton;
@@ -84,6 +78,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private TextView activityTextView;
     private TextView timerShow;
     private EditText newAct;
+    private Switch maskSwitch;
+    private Spinner positionSelector;
+    private Spinner patternSelector;
+    private Spinner handSelector;
     private ToggleButton timerSwitch;
     private ImageView statusImageView;
     private ProgressBar progressBar;
@@ -131,17 +129,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         }
 
         recordButton = (ToggleButton) findViewById(R.id.recordButton);
-        connectButton = (Button) findViewById(R.id.connectButton);
-        headShakeButton = (Button) findViewById(R.id.headShakeButton);
-        speakingButton = (Button) findViewById(R.id.speakingButton);
-        noddingButton = (Button) findViewById(R.id.noddingButton);
-        eatingButton = (Button) findViewById(R.id.eatingButton);
-        walkButton = (Button) findViewById(R.id.walkButton);
-        stayButton = (Button) findViewById(R.id.stayButton);
-        speakWalkButton = (Button) findViewById(R.id.speak_walk_button);
-        addButton = (Button) findViewById(R.id.new_act);
         newAct = (EditText) findViewById(R.id.new_activity);
-
+        maskSwitch = (Switch) findViewById(R.id.mask_switch);
+        positionSelector = (Spinner) findViewById(R.id.position_selector);
+        patternSelector = (Spinner) findViewById(R.id.pattern_selector);
+        handSelector = (Spinner) findViewById(R.id.hand_selector);
         timerShow = (TextView) findViewById(R.id.timer_show);
         timerSwitch = (ToggleButton) findViewById(R.id.timer_toggle);
 
@@ -159,15 +151,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         createCountDownTimer();
 
         recordButton.setOnClickListener(this);
-        connectButton.setOnClickListener(this);
-        headShakeButton.setOnClickListener(this);
-        speakingButton.setOnClickListener(this);
-        noddingButton.setOnClickListener(this);
-        eatingButton.setOnClickListener(this);
-        walkButton.setOnClickListener(this);
-        stayButton.setOnClickListener(this);
-        speakWalkButton.setOnClickListener(this);
-        addButton.setOnClickListener(this);
 
 
         statusImageView = (ImageView) findViewById(R.id.statusImage);
@@ -195,6 +178,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 connectionTextView, deviceNameTextView, statusImageView, progressBar, sharedPrefEditor);
         connectionListenerManager.setSamplingRate(samplingRate);
         eSenseManager = new ESenseManager(deviceName, MainActivity.this.getApplicationContext(), connectionListenerManager);
+       // eSenseManager.setAdvertisementAndConnectiontInterval(80,100,80,100);
 
         connectEarables();
 
@@ -260,55 +244,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             case R.id.connectButton:
                 progressBar.setVisibility(View.VISIBLE);
                 connectEarables();
-                break;
-
-            case R.id.headShakeButton:
-                activityName = "Head Shake";
-                sharedPrefEditor.putString("activityName", activityName);
-                sharedPrefEditor.commit();
-                setActivityName();
-                break;
-
-            case R.id.speakingButton:
-                activityName = "Speaking";
-                sharedPrefEditor.putString("activityName", activityName);
-                sharedPrefEditor.commit();
-                setActivityName();
-                break;
-
-            case R.id.noddingButton:
-                activityName = "Nodding";
-                sharedPrefEditor.putString("activityName", activityName);
-                sharedPrefEditor.commit();
-                setActivityName();
-                break;
-
-            case R.id.eatingButton:
-                activityName = "Eating";
-                sharedPrefEditor.putString("activityName", activityName);
-                sharedPrefEditor.commit();
-                setActivityName();
-                break;
-
-            case R.id.walkButton:
-                activityName = "Walking";
-                sharedPrefEditor.putString("activityName", activityName);
-                sharedPrefEditor.commit();
-                setActivityName();
-                break;
-
-            case R.id.stayButton:
-                activityName = "Staying";
-                sharedPrefEditor.putString("activityName", activityName);
-                sharedPrefEditor.commit();
-                setActivityName();
-                break;
-
-            case R.id.speak_walk_button:
-                activityName = "Speak and Walk";
-                sharedPrefEditor.putString("activityName", activityName);
-                sharedPrefEditor.commit();
-                setActivityName();
                 break;
             case R.id.timer_toggle:
                 timerSwitch.toggle();
@@ -412,8 +347,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         Log.d(TAG, "onPause()");
     }
 
-    public void setActivityName() {
-        activityTextView.setText(activityName);
+    //set the activity name given the spinner
+    private void setActivityName() {
+        //TODO: read the value from spinner
+        sharedPrefEditor.putString("activityName", activityName);
+        sharedPrefEditor.commit();
+
     }
 
     public void connectEarables() {
@@ -543,10 +482,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         sharedPrefEditor.commit();
         recordButton.setBackgroundResource(R.drawable.stop);
 
+        setActivityName();
+
         audioRecordServiceIntent.putExtra("activity", activityName);
 
         startDataCollection(activityName);
-        startService(audioRecordServiceIntent);
+        //startService(audioRecordServiceIntent);
         Log.d(TAG, "Start Collection!");
     }
 
@@ -571,7 +512,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         recordButton.setBackgroundResource(R.drawable.start);
 
         stopDataCollection();
-        stopService(audioRecordServiceIntent);
+        //stopService(audioRecordServiceIntent);
 
         if (activityObj != null) {
             databaseHandler.addActivity(activityObj);
@@ -622,6 +563,16 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     }
 
+    private String[] getPositionArray() {
+        return new String[]{"chin", "left cheek", "left ear", "left eye", "left forehead", "mouth", "nose", "right c" };
+    }
+
+    //Get the config string to be used as activity name
+    @SuppressLint("DefaultLocale")
+    private String getConfigString() {
+        return String.format("%s_%s_%s_%s_%d",config.getAccLPF(), config.getAccRange(), config.getGyroLPF(), config.getGyroRange(),samplingRate );
+    }
+
     // Show the activity creation window
     private void showActivityCreation() {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
@@ -645,5 +596,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 });
         AlertDialog newActDialog = builder.create();
         newActDialog.show();
+    }
+
+    //set up the spinner with adapter
+    private void setAdpter(Spinner spinner, ArrayAdapter adapter) {
+        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        spinner.setAdapter(adapter);
     }
 }

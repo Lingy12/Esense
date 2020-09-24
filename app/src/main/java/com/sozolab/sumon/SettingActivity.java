@@ -96,7 +96,7 @@ public class SettingActivity extends AppCompatActivity implements View.OnClickLi
         backButton.setOnClickListener(this);
     }
 
-    private void setAdpter(Spinner spinner, ArrayAdapter adapter) {
+    private void setAdpter(Spinner spinner, ArrayAdapter<?> adapter) {
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         spinner.setAdapter(adapter);
     }
