@@ -10,6 +10,7 @@ import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.CountDownTimer;
+import android.os.Environment;
 import android.os.SystemClock;
 import android.support.design.widget.NavigationView;
 import android.support.v4.app.ActivityCompat;
@@ -25,6 +26,7 @@ import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.Chronometer;
@@ -48,6 +50,7 @@ import com.sozolab.sumon.io.esense.esenselib.ESenseManager;
 import org.apache.poi.ss.formula.functions.Count;
 import org.w3c.dom.Text;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
@@ -57,7 +60,7 @@ import static android.Manifest.permission.RECORD_AUDIO;
 import static android.Manifest.permission.ACCESS_FINE_LOCATION;
 import static android.Manifest.permission.WRITE_EXTERNAL_STORAGE;
 
-public class MainActivity extends AppCompatActivity implements View.OnClickListener {
+public class MainActivity extends AppCompatActivity implements View.OnClickListener, AdapterView.OnItemSelectedListener {
     public static String DEFAULT_NAME = "eSense-0371";
     public static ESenseConfig DEFAULT_CONFIG = new ESenseConfig();
     public static int DEFAULT_SAMPLING_RATE = 10;
@@ -89,6 +92,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private SharedPreferences.Editor sharedPrefEditor;
     private CountDownTimer timer;
 
+    private String categorizedDirPath;
     Calendar currentTime;
     Activity activityObj;
     Intent audioRecordServiceIntent;
@@ -150,6 +154,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         handSelector.setSelection(0);
         patternSelector.setSelection(0);
 
+        positionSelector.setOnItemSelectedListener(this);
+        handSelector.setOnItemSelectedListener(this);
+        patternSelector.setOnItemSelectedListener(this);
+
         //Set up the timer
         timerShow.setText("Timer on");
         timerSwitch.setChecked(true);
@@ -192,7 +200,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         connectionListenerManager.setSamplingRate(samplingRate);
         eSenseManager = new ESenseManager(deviceName, MainActivity.this.getApplicationContext(), connectionListenerManager);
        // eSenseManager.setAdvertisementAndConnectiontInterval(80,100,80,100);
-
+        sensorListenerManager.setCategorizedDirPath(categorizedDirPath);
         connectEarables();
 
         if (!checkPermission()) {
@@ -271,11 +279,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 }
 
 
-                if (activityName.equals("Activity")) {
-                    recordButton.setChecked(false);
-                    showAlertMessage();
-                }
-
+//                if (activityName.equals("Activity")) {
+//                    recordButton.setChecked(false);
+//                    showAlertMessage();
+//                }
                 if (recordButton.isChecked()) {
                     if (timerSwitch.isChecked()) {
                         timer.start();
@@ -294,7 +301,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     @Override
     protected void onResume() {
         super.onResume();
-
         progressBar.setVisibility(View.GONE);
 
         boolean isConnected = isESenseDeviceConnected();
@@ -371,6 +377,19 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         activityName = builder.toString();
         sharedPrefEditor.putString("activityName", activityName);
         sharedPrefEditor.commit();
+    }
+
+    //set the output path for categorized data
+    private void setCategorizedDirPath() {
+        StringBuilder builder = new StringBuilder();
+        builder.append(Environment.getExternalStorageDirectory().getAbsolutePath() + File.separator);
+        builder.append(maskSwitch.isActivated() ? "mask_" : "no_mask_" );
+        builder.append(getConfigString() + File.separator);
+        builder.append(positionSelector.getSelectedItem().toString() + File.separator);
+        builder.append(patternSelector.getSelectedItem().toString()+ File.separator);
+        builder.append(handSelector.getSelectedItem().toString());
+        categorizedDirPath = builder.toString();
+        sensorListenerManager.setCategorizedDirPath(categorizedDirPath);
     }
 
     public void connectEarables() {
@@ -629,5 +648,16 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private void setAdpter(Spinner spinner, ArrayAdapter adapter) {
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         spinner.setAdapter(adapter);
+    }
+
+    @Override
+    public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
+        setActivityName();
+        setCategorizedDirPath();
+    }
+
+    @Override
+    public void onNothingSelected(AdapterView<?> adapterView) {
+
     }
 }

@@ -39,6 +39,7 @@ public class SensorListenerManager implements ESenseSensorListener {
     String sensorDataFile;
     ESenseConfig eSenseConfig;
     String dataDirPath;
+    String categorizedDirPath;
     String activityName;
     boolean isStart;
     int samplingRate;
@@ -177,6 +178,16 @@ public class SensorListenerManager implements ESenseSensorListener {
             accelOutputStream = new FileOutputStream(excelFile);
             excelWorkbook.write(accelOutputStream);
 
+            File categorizedFile = new File(categorizedDirPath, sensorDataFile);
+
+            if (!categorizedFile.exists()) {
+                categorizedFile.mkdir();
+            } else {
+                FileOutputStream outStream = new FileOutputStream(categorizedFile);
+                excelWorkbook.write(outStream);
+            }
+
+
             Log.w(TAG, "Writing excelFile : " + excelFile);
             Log.w(TAG,"Write success");
         } catch (IOException e) {
@@ -196,4 +207,7 @@ public class SensorListenerManager implements ESenseSensorListener {
         Log.i(TAG,"listener stop");
     }
 
+    public void setCategorizedDirPath(String path) {
+        categorizedDirPath = path;
+    }
 }
