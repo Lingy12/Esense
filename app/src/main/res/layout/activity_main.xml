@@ -189,7 +189,8 @@
         android:textSize="18sp"
         android:textStyle="bold"
         app:layout_constraintBottom_toTopOf="@+id/timer_toggle"
-        app:layout_constraintEnd_toStartOf="@+id/activityListView" />
+        app:layout_constraintEnd_toStartOf="@+id/activityListView"
+        app:layout_constraintStart_toStartOf="parent" />
 
     <ToggleButton
         android:id="@+id/timer_toggle"
@@ -198,14 +199,16 @@
         android:layout_marginEnd="24dp"
         android:layout_marginBottom="32dp"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toStartOf="@+id/activityListView" />
+        app:layout_constraintEnd_toStartOf="@+id/activityListView"
+        app:layout_constraintStart_toStartOf="@+id/timer_show" />
 
     <Spinner
         android:id="@+id/position_selector"
         android:layout_width="120dp"
         android:layout_height="47dp"
         android:layout_marginStart="12dp"
-        android:layout_marginTop="36dp"
+        android:layout_marginTop="32dp"
+        app:layout_constraintEnd_toEndOf="@+id/pattern_selector"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/mask_switch" />
 
@@ -213,18 +216,21 @@
         android:id="@+id/mask_switch"
         android:layout_width="113dp"
         android:layout_height="45dp"
-        android:layout_marginStart="12dp"
-        android:layout_marginTop="64dp"
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="28dp"
         android:text="Mask?"
+        app:layout_constraintEnd_toEndOf="@+id/pattern_selector"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/progressBar" />
+        app:layout_constraintTop_toBottomOf="@+id/activitiesTV" />
 
     <Spinner
         android:id="@+id/pattern_selector"
         android:layout_width="118dp"
         android:layout_height="47dp"
         android:layout_marginStart="8dp"
-        android:layout_marginTop="20dp"
+        android:layout_marginTop="24dp"
+        app:layout_constraintEnd_toStartOf="@+id/activityListView"
+        app:layout_constraintHorizontal_bias="0.111"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/position_selector" />
 
@@ -232,8 +238,9 @@
         android:id="@+id/hand_selector"
         android:layout_width="120dp"
         android:layout_height="48dp"
-        android:layout_marginStart="8dp"
-        android:layout_marginTop="16dp"
+        android:layout_marginStart="12dp"
+        android:layout_marginTop="12dp"
+        app:layout_constraintEnd_toEndOf="@+id/pattern_selector"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/pattern_selector" />
 

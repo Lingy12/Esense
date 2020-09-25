@@ -137,6 +137,19 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         timerShow = (TextView) findViewById(R.id.timer_show);
         timerSwitch = (ToggleButton) findViewById(R.id.timer_toggle);
 
+        ArrayAdapter<String> positionAdapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_item, getPositionArray());
+        ArrayAdapter<String> patternAdapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_item, getPatternArray());
+        ArrayAdapter<String> handAdapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_item, getHandArray());
+
+        maskSwitch.setChecked(false);
+        setAdpter(positionSelector, positionAdapter);
+        setAdpter(patternSelector, patternAdapter);
+        setAdpter(handSelector, handAdapter);
+
+        positionSelector.setSelection(0);
+        handSelector.setSelection(0);
+        patternSelector.setSelection(0);
+
         //Set up the timer
         timerShow.setText("Timer on");
         timerSwitch.setChecked(true);
@@ -350,9 +363,14 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     //set the activity name given the spinner
     private void setActivityName() {
         //TODO: read the value from spinner
+        StringBuilder builder = new StringBuilder();
+        builder.append(maskSwitch.isActivated() ? "mask_" : "no_mask_" );
+        builder.append(positionSelector.getSelectedItem().toString() + "_");
+        builder.append(patternSelector.getSelectedItem().toString()+ "_");
+        builder.append(handSelector.getSelectedItem().toString());
+        activityName = builder.toString();
         sharedPrefEditor.putString("activityName", activityName);
         sharedPrefEditor.commit();
-
     }
 
     public void connectEarables() {
@@ -483,10 +501,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         recordButton.setBackgroundResource(R.drawable.stop);
 
         setActivityName();
-
         audioRecordServiceIntent.putExtra("activity", activityName);
 
         startDataCollection(activityName);
+        Toast.makeText( this,String.format("Current activity %s",activityName),Toast.LENGTH_LONG).show();
         //startService(audioRecordServiceIntent);
         Log.d(TAG, "Start Collection!");
     }
@@ -564,7 +582,16 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     private String[] getPositionArray() {
-        return new String[]{"chin", "left cheek", "left ear", "left eye", "left forehead", "mouth", "nose", "right c" };
+        return new String[]{"chin", "left_cheek", "left_ear", "left_eye", "left_forehead", "mouth",
+                "nose", "right_cheek", "right_ear", "right_forehead"};
+    }
+
+    private String[] getPatternArray() {
+        return new String[] {"scratch", "rub", "support"};
+    }
+
+    private String[] getHandArray() {
+        return new String[] {"left", "right"};
     }
 
     //Get the config string to be used as activity name

@@ -142,7 +142,7 @@ public class SensorListenerManager implements ESenseSensorListener {
         sheet.setColumnWidth(5, (15 * 300));
         sheet.setColumnWidth(6, (15 * 300));
         sheet.setColumnWidth(7, (15 * 300));
-        sheet.setColumnWidth(8, (15 * 300));
+//        sheet.setColumnWidth(8, (15 * 300));
     }
 
     public void startDataCollection(String activity) {
