@@ -244,4 +244,13 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/pattern_selector" />
 
+    <Spinner
+        android:id="@+id/touching_switch"
+        android:layout_width="122dp"
+        android:layout_height="50dp"
+        android:layout_marginTop="22dp"
+        app:layout_constraintEnd_toEndOf="@+id/hand_selector"
+        app:layout_constraintStart_toStartOf="@+id/hand_selector"
+        app:layout_constraintTop_toBottomOf="@+id/hand_selector" />
+
 </android.support.constraint.ConstraintLayout>

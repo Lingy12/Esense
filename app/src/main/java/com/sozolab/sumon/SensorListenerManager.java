@@ -103,29 +103,35 @@ public class SensorListenerManager implements ESenseSensorListener {
 
                 Row dataRow = excelSheet.createRow(rowIndex);
                 Cell dataCell = null;
+
                 dataCell = dataRow.createCell(0);
-                dataCell.setCellValue(timeStamp);
+                dataCell.setCellValue(evt.getPacketIndex());
 
                 dataCell = dataRow.createCell(1);
-                dataCell.setCellValue(accel[0]);
+                dataCell.setCellValue(timeStamp);
 
                 dataCell = dataRow.createCell(2);
-                dataCell.setCellValue(accel[1]);
+                dataCell.setCellValue(accel[0]);
 
                 dataCell = dataRow.createCell(3);
-                dataCell.setCellValue(accel[2]);
+                dataCell.setCellValue(accel[1]);
 
                 dataCell = dataRow.createCell(4);
-                dataCell.setCellValue(gyro[0]);
+                dataCell.setCellValue(accel[2]);
 
                 dataCell = dataRow.createCell(5);
-                dataCell.setCellValue(gyro[1]);
+                dataCell.setCellValue(gyro[0]);
 
                 dataCell = dataRow.createCell(6);
-                dataCell.setCellValue(gyro[2]);
+                dataCell.setCellValue(gyro[1]);
 
                 dataCell = dataRow.createCell(7);
+                dataCell.setCellValue(gyro[2]);
+
+                dataCell = dataRow.createCell(8);
                 dataCell.setCellValue(activityName);
+
+
 
                 String sensorData = " Activity : " + activityName + " Row : " + rowIndex + " Time : " + timeStamp
                         + " accel : " + accel[0] + " " + accel[1] + " " + accel[2] + " gyro : " + gyro[0] + " " + gyro[1] + " " + gyro[2];
@@ -143,7 +149,7 @@ public class SensorListenerManager implements ESenseSensorListener {
         sheet.setColumnWidth(5, (15 * 300));
         sheet.setColumnWidth(6, (15 * 300));
         sheet.setColumnWidth(7, (15 * 300));
-//        sheet.setColumnWidth(8, (15 * 300));
+        sheet.setColumnWidth(8, (15 * 300));
     }
 
     public void startDataCollection(String activity) {
@@ -156,12 +162,48 @@ public class SensorListenerManager implements ESenseSensorListener {
         SimpleDateFormat simpleDateFormat = new SimpleDateFormat("dd_MM_yyyy_hh_mm_ss_a", Locale.getDefault());
         String currentDateTime = simpleDateFormat.format(new Date());
 
-        sensorDataFile = activityName + "_" + currentDateTime + ".csv";
+        sensorDataFile = activityName + "_" + currentDateTime + ".xls";
+        File dataDir = new File(dataDirPath);
+
+        if (!dataDir.exists()) {
+            dataDir.mkdir();
+        }
+
         excelFile = new File(dataDirPath, sensorDataFile);
 
         sheetName = activityName;
         excelWorkbook = new HSSFWorkbook();
         excelSheet = excelWorkbook.createSheet(sheetName);
+
+        Row dataRow = excelSheet.createRow(rowIndex);
+        Cell dataCell = null;
+
+        dataCell = dataRow.createCell(0);
+        dataCell.setCellValue("Packet Index");
+
+        dataCell = dataRow.createCell(1);
+        dataCell.setCellValue("Time stamp");
+
+        dataCell = dataRow.createCell(2);
+        dataCell.setCellValue("Ax");
+
+        dataCell = dataRow.createCell(3);
+        dataCell.setCellValue("Ay");
+
+        dataCell = dataRow.createCell(4);
+        dataCell.setCellValue("Az");
+
+        dataCell = dataRow.createCell(5);
+        dataCell.setCellValue("Gx");
+
+        dataCell = dataRow.createCell(6);
+        dataCell.setCellValue("Gy");
+
+        dataCell = dataRow.createCell(7);
+        dataCell.setCellValue("Gz");
+
+        dataCell = dataRow.createCell(8);
+        dataCell.setCellValue("Activity Label");
 
         setColumnWidth(excelSheet);
         dataCollecting = true;
@@ -178,15 +220,20 @@ public class SensorListenerManager implements ESenseSensorListener {
             accelOutputStream = new FileOutputStream(excelFile);
             excelWorkbook.write(accelOutputStream);
 
+            File categorizedDir = new File(categorizedDirPath);
             File categorizedFile = new File(categorizedDirPath, sensorDataFile);
 
-            if (!categorizedFile.exists()) {
-                categorizedFile.mkdir();
-            } else {
-                FileOutputStream outStream = new FileOutputStream(categorizedFile);
-                excelWorkbook.write(outStream);
+            Log.i(TAG, "categorized path:" + categorizedDirPath);
+            if (!categorizedDir.exists()) {
+                categorizedDir.mkdirs();
+                Log.i(TAG, "The directory exist? " + categorizedDir.exists());
+                Log.i(TAG, "make the directory");
+                categorizedFile = new File(categorizedDirPath, sensorDataFile);
             }
 
+            FileOutputStream outStream = new FileOutputStream(categorizedFile);
+            excelWorkbook.write(outStream);
+            Log.i(TAG, "Writing categorized file: " + categorizedFile);
 
             Log.w(TAG, "Writing excelFile : " + excelFile);
             Log.w(TAG,"Write success");
@@ -209,5 +256,9 @@ public class SensorListenerManager implements ESenseSensorListener {
 
     public void setCategorizedDirPath(String path) {
         categorizedDirPath = path;
+    }
+
+    public String getCategorizedDirPath() {
+        return categorizedDirPath;
     }
 }

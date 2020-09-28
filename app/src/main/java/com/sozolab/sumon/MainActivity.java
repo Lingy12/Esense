@@ -8,16 +8,14 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
+import android.media.MediaPlayer;
 import android.os.Build;
 import android.os.CountDownTimer;
 import android.os.Environment;
 import android.os.SystemClock;
-import android.support.design.widget.NavigationView;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
-import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBar;
-import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -28,9 +26,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
-import android.widget.Button;
 import android.widget.Chronometer;
-import android.widget.CompoundButton;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.ListView;
@@ -43,18 +39,11 @@ import android.widget.ToggleButton;
 
 import com.google.gson.Gson;
 import com.sozolab.sumon.io.esense.esenselib.ESenseConfig;
-import com.sozolab.sumon.io.esense.esenselib.ESenseConnectionListener;
-import com.sozolab.sumon.io.esense.esenselib.ESenseEventListener;
 import com.sozolab.sumon.io.esense.esenselib.ESenseManager;
-
-import org.apache.poi.ss.formula.functions.Count;
-import org.w3c.dom.Text;
 
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Calendar;
-import java.util.List;
-import java.util.Timer;
 
 import static android.Manifest.permission.RECORD_AUDIO;
 import static android.Manifest.permission.ACCESS_FINE_LOCATION;
@@ -85,12 +74,14 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private Spinner positionSelector;
     private Spinner patternSelector;
     private Spinner handSelector;
+    private Spinner touchingSelector;
     private ToggleButton timerSwitch;
     private ImageView statusImageView;
     private ProgressBar progressBar;
     private SharedPreferences sharedPreferences;
     private SharedPreferences.Editor sharedPrefEditor;
     private CountDownTimer timer;
+   // private MediaPlayer mp = MediaPlayer.create(this, R.raw.beep);
 
     private String categorizedDirPath;
     Calendar currentTime;
@@ -140,23 +131,28 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         handSelector = (Spinner) findViewById(R.id.hand_selector);
         timerShow = (TextView) findViewById(R.id.timer_show);
         timerSwitch = (ToggleButton) findViewById(R.id.timer_toggle);
+        touchingSelector = (Spinner) findViewById(R.id.touching_switch);
 
         ArrayAdapter<String> positionAdapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_item, getPositionArray());
         ArrayAdapter<String> patternAdapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_item, getPatternArray());
         ArrayAdapter<String> handAdapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_item, getHandArray());
+        ArrayAdapter<String> touchingAdapter = new ArrayAdapter<>(this,android.R.layout.simple_spinner_item, getTouchingArray());
 
         maskSwitch.setChecked(false);
         setAdpter(positionSelector, positionAdapter);
         setAdpter(patternSelector, patternAdapter);
         setAdpter(handSelector, handAdapter);
+        setAdpter(touchingSelector, touchingAdapter);
 
         positionSelector.setSelection(0);
         handSelector.setSelection(0);
         patternSelector.setSelection(0);
+        touchingSelector.setSelection(0);
 
         positionSelector.setOnItemSelectedListener(this);
         handSelector.setOnItemSelectedListener(this);
         patternSelector.setOnItemSelectedListener(this);
+        touchingSelector.setOnItemSelectedListener(this);
 
         //Set up the timer
         timerShow.setText("Timer on");
@@ -241,6 +237,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 Toast.makeText(this, "Clear history...", Toast.LENGTH_SHORT).show();
                 databaseHandler.clearAll();
                 FileHandler.deleteRecursive();
+                FileHandler.deleteCategorizedRecursive();
                 refreshActivityList();
                 return true;
             case R.id.reset_menu:
@@ -369,27 +366,42 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     //set the activity name given the spinner
     private void setActivityName() {
         //TODO: read the value from spinner
-        StringBuilder builder = new StringBuilder();
-        builder.append(maskSwitch.isActivated() ? "mask_" : "no_mask_" );
-        builder.append(positionSelector.getSelectedItem().toString() + "_");
-        builder.append(patternSelector.getSelectedItem().toString()+ "_");
-        builder.append(handSelector.getSelectedItem().toString());
-        activityName = builder.toString();
-        sharedPrefEditor.putString("activityName", activityName);
-        sharedPrefEditor.commit();
+        if (touchingSelector.getSelectedItem().toString().equals("Touching")) {
+            StringBuilder builder = new StringBuilder();
+            builder.append(maskSwitch.isActivated() ? "mask_" : "no_mask_");
+            builder.append(positionSelector.getSelectedItem().toString() + "_");
+            builder.append(patternSelector.getSelectedItem().toString() + "_");
+            builder.append(handSelector.getSelectedItem().toString());
+            activityName = builder.toString();
+            sharedPrefEditor.putString("activityName", activityName);
+            sharedPrefEditor.commit();
+        } else {
+            activityName = touchingSelector.getSelectedItem().toString();
+            sharedPrefEditor.putString("activityName", activityName);
+            sharedPrefEditor.commit();
+        }
     }
 
     //set the output path for categorized data
     private void setCategorizedDirPath() {
         StringBuilder builder = new StringBuilder();
-        builder.append(Environment.getExternalStorageDirectory().getAbsolutePath() + File.separator);
-        builder.append(maskSwitch.isActivated() ? "mask_" : "no_mask_" );
-        builder.append(getConfigString() + File.separator);
-        builder.append(positionSelector.getSelectedItem().toString() + File.separator);
-        builder.append(patternSelector.getSelectedItem().toString()+ File.separator);
-        builder.append(handSelector.getSelectedItem().toString());
-        categorizedDirPath = builder.toString();
-        sensorListenerManager.setCategorizedDirPath(categorizedDirPath);
+
+        if (touchingSelector.getSelectedItem().toString().equals("Touching")) {
+            builder.append(Environment.getExternalStorageDirectory().getAbsolutePath() + File.separator + "ESenseCategorized" + File.separator);
+            builder.append(maskSwitch.isActivated() ? "mask_" : "no_mask_");
+            builder.append(getConfigString() + File.separator);
+            builder.append(positionSelector.getSelectedItem().toString() + File.separator);
+            builder.append(patternSelector.getSelectedItem().toString() + File.separator);
+            builder.append(handSelector.getSelectedItem().toString());
+            categorizedDirPath = builder.toString();
+            sensorListenerManager.setCategorizedDirPath(categorizedDirPath);
+        } else {
+            builder.append(Environment.getExternalStorageDirectory().getAbsolutePath() + File.separator + "ESenseCategorized" + File.separator);
+            builder.append("no_touching" + File.separator);
+            builder.append(touchingSelector.getSelectedItem().toString());
+            categorizedDirPath = builder.toString();
+            sensorListenerManager.setCategorizedDirPath(categorizedDirPath);
+        }
     }
 
     public void connectEarables() {
@@ -521,10 +533,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         setActivityName();
         audioRecordServiceIntent.putExtra("activity", activityName);
-
+        audioRecordServiceIntent.putExtra("categorizedpath", sensorListenerManager.getCategorizedDirPath());
         startDataCollection(activityName);
-        Toast.makeText( this,String.format("Current activity %s",activityName),Toast.LENGTH_LONG).show();
-        //startService(audioRecordServiceIntent);
+       // Toast.makeText( this,String.format("Current activity %s",activityName),Toast.LENGTH_LONG).show();
+        startService(audioRecordServiceIntent);
         Log.d(TAG, "Start Collection!");
     }
 
@@ -549,7 +561,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         recordButton.setBackgroundResource(R.drawable.start);
 
         stopDataCollection();
-        //stopService(audioRecordServiceIntent);
+        stopService(audioRecordServiceIntent);
 
         if (activityObj != null) {
             databaseHandler.addActivity(activityObj);
@@ -594,7 +606,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         if (eSenseManager.getSensorConfig()) {
             String builder = String.format("Current config: AccLPF: %s, AccRange: %s, GyroLPF: %s, GyroRange: %s", config.getAccLPF(), config.getAccRange(), config.getGyroLPF(), config.getGyroRange()) +
                     "Sampling rate: " + samplingRate;
-            Toast.makeText(this, builder,Toast.LENGTH_LONG).show();
+         //   Toast.makeText(this, builder,Toast.LENGTH_LONG).show();
         }
 
 
@@ -611,6 +623,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     private String[] getHandArray() {
         return new String[] {"left", "right"};
+    }
+
+    private String[] getTouchingArray() {
+        return new String[]{"Touching", "sit_still","look_left", "look_right", "clockwise_head_rotation",
+        "anti_clockwise_head_rotation", "look_up", "look_down", "shake_head", "nod"};
     }
 
     //Get the config string to be used as activity name

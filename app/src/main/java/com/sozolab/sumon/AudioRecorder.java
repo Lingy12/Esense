@@ -28,8 +28,8 @@ public class AudioRecorder {
         mediaRecorder = new MediaRecorder();
         activity = "";
         simpleDateFormat = new SimpleDateFormat("dd_MM_yyyy_hh_mm_ss_a", Locale.getDefault());
-        audioDirPath = Environment.getExternalStorageDirectory().getAbsolutePath() + File.separator + "ESenseData";
-        createAudioDataFolder();
+//        audioDirPath = Environment.getExternalStorageDirectory().getAbsolutePath() + File.separator + "ESenseData";
+        audioDirPath = null;
     }
 
     public void createAudioDataFolder() {
@@ -46,8 +46,9 @@ public class AudioRecorder {
         }
     }
 
-    public void startAudioRecordProcess(String activityName){
-
+    public void startAudioRecordProcess(String activityName, String dir){
+        audioDirPath = dir;
+        createAudioDataFolder();
         activity = activityName;
 
         //check the memory
@@ -83,7 +84,7 @@ public class AudioRecorder {
         try {
             if(mediaRecorder != null){
                 String currentDateTime = simpleDateFormat.format(new Date());
-                audioFileName = activity + "_" + currentDateTime +".3gpp";
+                audioFileName = activity + "_" + currentDateTime +".wav";
                 String outputFilePath = audioDirPath + File.separator + audioFileName;
                 Log.d(TAG, "Start recording Audio File : " + outputFilePath);
                 mediaRecorder.setOutputFile(outputFilePath);

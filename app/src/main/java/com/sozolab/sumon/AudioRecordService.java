@@ -35,9 +35,10 @@ public class AudioRecordService extends Service {
         Log.d(TAG, "onStartCommand()");
 
         String activity = intent.getStringExtra("activity");
+        String dir = intent.getStringExtra("categorizedpath");
 
         if(audioRecorder != null){
-            audioRecorder.startAudioRecordProcess(activity);
+            audioRecorder.startAudioRecordProcess(activity, dir);
         }else{
             Log.d(TAG, "audioRecorder is null");
         }
