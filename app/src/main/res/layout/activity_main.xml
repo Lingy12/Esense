@@ -82,12 +82,12 @@
         app:layout_constraintTop_toBottomOf="@+id/view4" />
 
     <Button
-        android:id="@+id/new_act"
+        android:id="@+id/new_person"
         android:layout_width="110dp"
         android:layout_height="wrap_content"
         android:layout_marginStart="148dp"
         android:layout_marginTop="40dp"
-        android:text="Cutomized Activity"
+        android:text="Participant Name"
         android:textAllCaps="false"
         android:textSize="14sp"
         app:layout_constraintEnd_toStartOf="@+id/recordButton"
@@ -101,7 +101,7 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="8dp"
         android:layout_marginBottom="8dp"
-        android:text="Activity"
+        android:text="Name"
         android:textColor="#4CAF50"
         android:textSize="15sp"
         android:textStyle="bold"

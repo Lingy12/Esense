@@ -8,7 +8,6 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
-import android.media.MediaPlayer;
 import android.os.Build;
 import android.os.CountDownTimer;
 import android.os.Environment;
@@ -26,6 +25,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.Button;
 import android.widget.Chronometer;
 import android.widget.EditText;
 import android.widget.ImageView;
@@ -83,6 +83,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private CountDownTimer timer;
    // private MediaPlayer mp = MediaPlayer.create(this, R.raw.beep);
 
+    private Button newName;
+    private Button connectButton;
+
+    private String participantName = "";
     private String categorizedDirPath;
     Calendar currentTime;
     Activity activityObj;
@@ -124,7 +128,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         }
 
         recordButton = (ToggleButton) findViewById(R.id.recordButton);
-        newAct = (EditText) findViewById(R.id.new_activity);
+        newAct = (EditText) findViewById(R.id.new_name);
         maskSwitch = (Switch) findViewById(R.id.mask_switch);
         positionSelector = (Spinner) findViewById(R.id.position_selector);
         patternSelector = (Spinner) findViewById(R.id.pattern_selector);
@@ -132,6 +136,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         timerShow = (TextView) findViewById(R.id.timer_show);
         timerSwitch = (ToggleButton) findViewById(R.id.timer_toggle);
         touchingSelector = (Spinner) findViewById(R.id.touching_switch);
+        newName = (Button) findViewById(R.id.new_person);
+        connectButton = (Button) findViewById(R.id.connectButton);
 
         ArrayAdapter<String> positionAdapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_item, getPositionArray());
         ArrayAdapter<String> patternAdapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_item, getPatternArray());
@@ -168,6 +174,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         createCountDownTimer();
 
         recordButton.setOnClickListener(this);
+        newName.setOnClickListener(this);
+        connectButton.setOnClickListener(this);
 
 
         statusImageView = (ImageView) findViewById(R.id.statusImage);
@@ -265,8 +273,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 break;
             case R.id.timer_toggle:
                 timerSwitch.toggle();
-            case R.id.new_act:
-                showActivityCreation();
+            case R.id.new_person:
+                showNameCreation();
                 break;
             case R.id.recordButton:
                 if (!isESenseDeviceConnected()) {
@@ -299,6 +307,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     protected void onResume() {
         super.onResume();
         progressBar.setVisibility(View.GONE);
+
+        Log.i(TAG, "current participant" + participantName);
 
         boolean isConnected = isESenseDeviceConnected();
 
@@ -385,9 +395,13 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     //set the output path for categorized data
     private void setCategorizedDirPath() {
         StringBuilder builder = new StringBuilder();
+        builder.append(Environment.getExternalStorageDirectory().getAbsolutePath() + File.separator + "ESenseCategorized" + File.separator);
+
+        if (!participantName.equals("")) {
+            builder.append(participantName + File.separator);
+        }
 
         if (touchingSelector.getSelectedItem().toString().equals("Touching")) {
-            builder.append(Environment.getExternalStorageDirectory().getAbsolutePath() + File.separator + "ESenseCategorized" + File.separator);
             builder.append(maskSwitch.isActivated() ? "mask_" : "no_mask_");
             builder.append(getConfigString() + File.separator);
             builder.append(positionSelector.getSelectedItem().toString() + File.separator);
@@ -396,7 +410,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             categorizedDirPath = builder.toString();
             sensorListenerManager.setCategorizedDirPath(categorizedDirPath);
         } else {
-            builder.append(Environment.getExternalStorageDirectory().getAbsolutePath() + File.separator + "ESenseCategorized" + File.separator);
             builder.append("no_touching" + File.separator);
             builder.append(touchingSelector.getSelectedItem().toString());
             categorizedDirPath = builder.toString();
@@ -536,7 +549,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         audioRecordServiceIntent.putExtra("categorizedpath", sensorListenerManager.getCategorizedDirPath());
         startDataCollection(activityName);
        // Toast.makeText( this,String.format("Current activity %s",activityName),Toast.LENGTH_LONG).show();
-        startService(audioRecordServiceIntent);
+//        startService(audioRecordServiceIntent);
         Log.d(TAG, "Start Collection!");
     }
 
@@ -561,7 +574,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         recordButton.setBackgroundResource(R.drawable.start);
 
         stopDataCollection();
-        stopService(audioRecordServiceIntent);
+//        stopService(audioRecordServiceIntent);
 
         if (activityObj != null) {
             databaseHandler.addActivity(activityObj);
@@ -637,18 +650,18 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     // Show the activity creation window
-    private void showActivityCreation() {
+    private void showNameCreation() {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         View inflator = LayoutInflater.from(this).inflate(R.layout.add_act, null);
 
-        final EditText newAct = (EditText) inflator.findViewById(R.id.new_activity);
+        final EditText newName = (EditText) inflator.findViewById(R.id.new_name);
 
         builder.setView(inflator)
                 .setPositiveButton("Save", (dialog, which) -> {
-                    activityName = newAct.getText().toString();
-                    sharedPrefEditor.putString("activityName", activityName);
+                    participantName = newName.getText().toString();
+                    sharedPrefEditor.putString("participantName", participantName);
                     sharedPrefEditor.commit();
-                    setActivityName();
+                    setName();
                     dialog.cancel();
                 })
                 .setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
@@ -659,6 +672,13 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 });
         AlertDialog newActDialog = builder.create();
         newActDialog.show();
+    }
+
+    private void setName() {
+        Log.d(TAG, "setName()");
+
+        activityTextView.setText(participantName);
+        setCategorizedDirPath();
     }
 
     //set up the spinner with adapter
