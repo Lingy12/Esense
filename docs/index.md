@@ -4,7 +4,7 @@
 
 ![](images/step0.png)
 
-1. Go to the eSense face touching folder
+1. Go to the [eSense face touching folder](https://www.dropbox.com/sh/luvr69q7nbwy9wn/AAAMaU-DFkWvRxxbCxG-Wkqla?dl=0)
 2. Download *ESense.apk* and install
 
 ### Step 1: Connect the ESense Earbud to your device
