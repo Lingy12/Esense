@@ -12,7 +12,7 @@
 ![](images/bluetooth.jpg)
  
 1. Long press the left side of earbud which has a *push button* (Location of push button is shown below)
-until the LED starts blinking blue and red. Now in the host device you should see a new device with name *eSense-<Number>*
+until the LED starts blinking blue and red. Now in the host device you should see a new device with name **eSense-(Number)**
 
 ![](images/pushbutton.png)
 
