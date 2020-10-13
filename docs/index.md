@@ -1,42 +1,55 @@
 ## Data Collection Guide
 
+### Step 0: Download the apk file
+
+![](images/step0.png)
+
+1. Go to the eSense face touching folder
+2. Download *ESense.apk* and install
+
 ### Step 1: Connect the ESense Earbud to your device
 
 ![](images/bluetooth.jpg)
  
-1. Long press the left side of ESense until red and blue light are flashing
+1. Long press the left side of earbud which has a *push button* (Location of push button is shown below)
+until the LED starts blinking blue and red. Now in the host device you should see a new device with name *eSense-<Number>*
+
+![](images/pushbutton.png)
 
 2. Connect the ESense as connecting the normal bluetooth device to your phone
 
-### Step 2: Open the ESenseLog app and click reset connection (Skip this step if this is not first time you use the app)
+3. After connect successfully, you can see the LED only blinking blue
+
+### Step 2: Set the device setting according to the image below
+
+![](images/setting.jpg)
+
+1. Open the option menu
+2. Click on *Setting*
+3. Set the device setting according to the picture below
+4. Click *save* button
+5. Click the *connect* button in the main page
+
+*Note*: Device ID should be set to the exact name as you see in step 1
+
+### Step 3: Open the ESenseLog app and click reset connection (Skip this step if this is not first time you use the app)
 
 ![](images/mainpagewithoption.jpg)
 
 1. Open the option menu
 2. Click reset connection
-3. Long press the left side button on ESense to shut down the device
-4. Repeat Step 1 again
+3. Long press the *push button* on ESense until the LED flash red one time to shut down the device 
+4. Repeat Step 1 again then click the *connect* button
 
 Note: This will set the advertise interval to 20-40ms
 
-### Step 3: Enter the participant name
+### Step 4: Enter the participant name
 
 1. Click on the *Participant Name* button and see the following dialog pop out
 
 ![](images/newname.jpg)
 
 2. Enter the participant name and click save
-
-### Step 4: Set the device setting according to the 
-
-1. Open the option menu
-2. Click on *Setting*
-3. Set the device setting according to the picture below
-4. Click *save* button
-
-*Note*: Device ID should be set to the exact name as you see in step 1
-
-![](images/setting.jpg)
 
 ### Step 5: Set the type of the motion you will need to perform
 
@@ -56,6 +69,7 @@ Note: This will set the advertise interval to 20-40ms
 
 ### Step 9: Click the stop button after finishing one motion
 
+![](images/step9.jpg)
 
 ### Step 10: Access the data file
 
