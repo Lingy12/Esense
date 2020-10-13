@@ -75,6 +75,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private Spinner patternSelector;
     private Spinner handSelector;
     private Spinner touchingSelector;
+    private Button touchButton;
     private ToggleButton timerSwitch;
     private ImageView statusImageView;
     private ProgressBar progressBar;
@@ -138,6 +139,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         touchingSelector = (Spinner) findViewById(R.id.touching_switch);
         newName = (Button) findViewById(R.id.new_person);
         connectButton = (Button) findViewById(R.id.connectButton);
+        touchButton = (Button) findViewById(R.id.touch_button);
 
         ArrayAdapter<String> positionAdapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_item, getPositionArray());
         ArrayAdapter<String> patternAdapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_item, getPatternArray());
@@ -159,6 +161,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         handSelector.setOnItemSelectedListener(this);
         patternSelector.setOnItemSelectedListener(this);
         touchingSelector.setOnItemSelectedListener(this);
+        touchButton.setOnClickListener(this);
 
         //Set up the timer
         timerShow.setText("Timer on");
@@ -203,7 +206,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 connectionTextView, deviceNameTextView, statusImageView, progressBar, sharedPrefEditor);
         connectionListenerManager.setSamplingRate(samplingRate);
         eSenseManager = new ESenseManager(deviceName, MainActivity.this.getApplicationContext(), connectionListenerManager);
-       // eSenseManager.setAdvertisementAndConnectiontInterval(80,100,80,100);
         sensorListenerManager.setCategorizedDirPath(categorizedDirPath);
         connectEarables();
 
@@ -251,6 +253,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             case R.id.reset_menu:
                 // Disconnect the device to reset
                 Toast.makeText(this, "Reset connection..", Toast.LENGTH_SHORT).show();
+                resetConnection();
                 disconnect();
                 return true;
             case R.id.setting_menu:
@@ -275,6 +278,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 timerSwitch.toggle();
             case R.id.new_person:
                 showNameCreation();
+                break;
+            case R.id.touch_button:
+                sensorListenerManager.setCatchTime();
                 break;
             case R.id.recordButton:
                 if (!isESenseDeviceConnected()) {
@@ -371,6 +377,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     protected void onPause() {
         super.onPause();
         Log.d(TAG, "onPause()");
+    }
+
+    private void resetConnection() {
+        eSenseManager.setAdvertisementAndConnectiontInterval(20,40,20,40);
     }
 
     //set the activity name given the spinner

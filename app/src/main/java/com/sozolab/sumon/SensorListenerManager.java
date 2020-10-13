@@ -41,6 +41,8 @@ public class SensorListenerManager implements ESenseSensorListener {
     String dataDirPath;
     String categorizedDirPath;
     String activityName;
+    ESenseEvent eventCache;
+    long timeTouch;
     boolean isStart;
     int samplingRate;
 
@@ -77,7 +79,7 @@ public class SensorListenerManager implements ESenseSensorListener {
     @Override
     public void onSensorChanged(ESenseEvent evt) {
         Log.d(TAG, "onSensorChanged()");
-
+        eventCache = evt;
         if (dataCollecting){
 
             if(excelSheet != null){
@@ -211,6 +213,13 @@ public class SensorListenerManager implements ESenseSensorListener {
     }
 
     public void stopDataCollection(){
+        Row dataRow = excelSheet.createRow(++rowIndex);
+        Cell dataCell = null;
+
+        Log.i(TAG, "Time stamp for touching is: " + timeTouch);
+
+        dataCell = dataRow.createCell(0);
+        dataCell.setCellValue(timeTouch);
 
         rowIndex = 1;
         dataCollecting = false;
@@ -252,6 +261,10 @@ public class SensorListenerManager implements ESenseSensorListener {
         }
 
         Log.i(TAG,"listener stop");
+    }
+
+    public void setCatchTime() {
+        timeTouch = eventCache.getTimestamp();
     }
 
     public void setCategorizedDirPath(String path) {
