@@ -18,17 +18,17 @@ until the LED starts blinking blue and red. Now in the host device you should se
 
 2. Connect the ESense as connecting the normal bluetooth device to your phone
 
-3. After connect successfully, you can see the LED only blinking blue
+3. After connect successfully, you can see the blue LED blinking 
 
-### Step 2: Set the device setting according to the image below
-
-![](images/setting.jpg)
+### Step 2: Set the device setting
 
 1. Open the option menu
 2. Click on *Setting*
 3. Set the device setting according to the picture below
 4. Click *save* button
 5. Click the *connect* button in the main page
+
+![](images/setting.jpg)
 
 *Note*: Device ID should be set to the exact name as you see in step 1
 
