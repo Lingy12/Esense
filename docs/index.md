@@ -1,37 +1,68 @@
-## Welcome to GitHub Pages
+## Data Collection Guide
 
-You can use the [editor on GitHub](https://github.com/Lingy12/Esense/edit/master/docs/index.md) to maintain and preview the content for your website in Markdown files.
+### Step 1: Connect the ESense Earbud to your device
 
-Whenever you commit to this repository, GitHub Pages will run [Jekyll](https://jekyllrb.com/) to rebuild the pages in your site, from the content in your Markdown files.
+![](images/bluetooth.jpg)
+ 
+1. Long press the left side of ESense until red and blue light are flashing
 
-### Markdown
+2. Connect the ESense as connecting the normal bluetooth device to your phone
 
-Markdown is a lightweight and easy-to-use syntax for styling your writing. It includes conventions for
+### Step 2: Open the ESenseLog app and click reset connection (Skip this step if this is not first time you use the app)
 
-```markdown
-Syntax highlighted code block
+![](images/mainpagewithoption.jpg)
 
-# Header 1
-## Header 2
-### Header 3
+1. Open the option menu
+2. Click reset connection
+3. Long press the left side button on ESense to shut down the device
+4. Repeat Step 1 again
 
-- Bulleted
-- List
+Note: This will set the advertise interval to 20-40ms
 
-1. Numbered
-2. List
+### Step 3: Enter the participant name
 
-**Bold** and _Italic_ and `Code` text
+1. Click on the *Participant Name* button and see the following dialog pop out
 
-[Link](url) and ![Image](src)
-```
+![](images/newname.jpg)
 
-For more details see [GitHub Flavored Markdown](https://guides.github.com/features/mastering-markdown/).
+2. Enter the participant name and click save
 
-### Jekyll Themes
+### Step 4: Set the device setting according to the 
 
-Your Pages site will use the layout and styles from the Jekyll theme you have selected in your [repository settings](https://github.com/Lingy12/Esense/settings). The name of this theme is saved in the Jekyll `_config.yml` configuration file.
+1. Open the option menu
+2. Click on *Setting*
+3. Set the device setting according to the picture below
+4. Click *save* button
 
-### Support or Contact
+*Note*: Device ID should be set to the exact name as you see in step 1
 
-Having trouble with Pages? Check out our [documentation](https://docs.github.com/categories/github-pages-basics/) or [contact support](https://github.com/contact) and we’ll help you sort it out.
+![](images/setting.jpg)
+
+### Step 5: Set the type of the motion you will need to perform
+
+![](images/step5.jpg)
+
+### Step 6: Enable/Disable the timer
+
+![](images/step6.jpg)
+
+### Step 7: Click the start button to start collection
+
+![](images/step7.jpg)
+
+### Step 8: Click *touch* button with another hand when you touch your face
+
+![](images/step8.jpg)
+
+### Step 9: Click the stop button after finishing one motion
+
+
+### Step 10: Access the data file
+
+1. Go to the file browser on the phone
+2. Find the folder called *ESenseCategorized*
+3. Access the data file categorized by participant name and motion
+
+Note: *The last line of the excel file is the time stamp when touching happened* 
+
+![](images/step10.jpg)
