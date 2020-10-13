@@ -56,7 +56,6 @@ Note: This will set the advertise interval to 20-40ms
 
 ### Step 9: Click the stop button after finishing one motion
 
-![](images/step9.jpg)
 
 ### Step 10: Access the data file
 
