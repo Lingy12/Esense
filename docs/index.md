@@ -2,8 +2,6 @@
 
 ### Step 0: Download the apk file
 
-![](images/step0.png)
-
 1. Go to the [eSense face touching folder](https://www.dropbox.com/sh/luvr69q7nbwy9wn/AAAMaU-DFkWvRxxbCxG-Wkqla?dl=0)
 2. Download *ESense.apk* and install
 
