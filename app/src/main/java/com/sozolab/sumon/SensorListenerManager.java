@@ -17,11 +17,12 @@ import org.apache.poi.ss.usermodel.Workbook;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.Serializable;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
 
-public class SensorListenerManager implements ESenseSensorListener {
+public class SensorListenerManager implements ESenseSensorListener, Serializable {
 
     private final String TAG = "SensorListenerManager";
     private long timeStamp;
@@ -43,8 +44,10 @@ public class SensorListenerManager implements ESenseSensorListener {
     String activityName;
     ESenseEvent eventCache;
     long timeTouch;
+    long timeStart;
     boolean isStart;
     int samplingRate;
+    ChartDataListener dataListener;
 
     public SensorListenerManager(Context context){
         this.context = context;
@@ -80,7 +83,11 @@ public class SensorListenerManager implements ESenseSensorListener {
     public void onSensorChanged(ESenseEvent evt) {
         Log.d(TAG, "onSensorChanged()");
         eventCache = evt;
+
+
+
         if (dataCollecting){
+            dataListener.update(evt);
 
             if(excelSheet != null){
                 rowIndex++;
@@ -273,5 +280,9 @@ public class SensorListenerManager implements ESenseSensorListener {
 
     public String getCategorizedDirPath() {
         return categorizedDirPath;
+    }
+
+    public void addChartListener(ChartDataListener l) {
+        dataListener = l;
     }
 }

@@ -6,6 +6,23 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
+    <com.github.mikephil.charting.charts.LineChart
+        android:id="@+id/acc_chart"
+        android:layout_width="242dp"
+        android:layout_height="149dp"
+        android:layout_marginTop="16dp"
+        app:layout_constraintStart_toStartOf="@+id/gyro_chart"
+        app:layout_constraintTop_toBottomOf="@+id/gyro_chart" />
+
+    <com.github.mikephil.charting.charts.LineChart
+        android:id="@+id/gyro_chart"
+        android:layout_width="238dp"
+        android:layout_height="145dp"
+        android:layout_marginStart="36dp"
+        android:layout_marginTop="72dp"
+        app:layout_constraintStart_toEndOf="@+id/hand_selector"
+        app:layout_constraintTop_toBottomOf="@+id/activityhistoryTV" />
+
     <Button
         android:id="@+id/connectButton"
         android:layout_width="110dp"
@@ -135,16 +152,6 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/chronometer" />
 
-    <ListView
-        android:id="@+id/activityListView"
-        android:layout_width="250dp"
-        android:layout_height="0dp"
-        android:layout_marginTop="8dp"
-        android:layout_marginBottom="8dp"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/activityhistoryTV" />
-
     <ToggleButton
         android:id="@+id/recordButton"
         android:layout_width="64dp"
@@ -181,7 +188,6 @@
         style="@style/selector"
         android:layout_width="60dp"
         android:layout_height="60dp"
-        android:layout_marginEnd="52dp"
         android:layout_marginBottom="84dp"
         android:background="@drawable/custom_textfield"
         android:gravity="center"
@@ -189,17 +195,14 @@
         android:textSize="18sp"
         android:textStyle="bold"
         app:layout_constraintBottom_toTopOf="@+id/timer_toggle"
-        app:layout_constraintEnd_toStartOf="@+id/activityListView"
         app:layout_constraintStart_toStartOf="parent" />
 
     <ToggleButton
         android:id="@+id/timer_toggle"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginEnd="24dp"
         android:layout_marginBottom="32dp"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toStartOf="@+id/activityListView"
         app:layout_constraintStart_toStartOf="@+id/timer_show" />
 
     <Spinner
@@ -229,8 +232,6 @@
         android:layout_height="47dp"
         android:layout_marginStart="8dp"
         android:layout_marginTop="24dp"
-        app:layout_constraintEnd_toStartOf="@+id/activityListView"
-        app:layout_constraintHorizontal_bias="0.111"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/position_selector" />
 
@@ -257,9 +258,10 @@
         android:id="@+id/touch_button"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginStart="39dp"
+        android:layout_marginStart="36dp"
+        android:layout_marginBottom="40dp"
         android:text="Touch"
-        app:layout_constraintBottom_toTopOf="@+id/activityListView"
+        app:layout_constraintBottom_toTopOf="@+id/gyro_chart"
         app:layout_constraintStart_toEndOf="@+id/position_selector" />
 
 </android.support.constraint.ConstraintLayout>

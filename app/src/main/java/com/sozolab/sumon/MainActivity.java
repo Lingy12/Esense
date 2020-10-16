@@ -8,6 +8,7 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
+import android.graphics.Color;
 import android.os.Build;
 import android.os.CountDownTimer;
 import android.os.Environment;
@@ -37,20 +38,34 @@ import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.ToggleButton;
 
+import com.github.mikephil.charting.charts.LineChart;
+import com.github.mikephil.charting.components.AxisBase;
+import com.github.mikephil.charting.components.Legend;
+import com.github.mikephil.charting.components.LegendEntry;
+import com.github.mikephil.charting.components.XAxis;
+import com.github.mikephil.charting.components.YAxis;
+import com.github.mikephil.charting.data.Entry;
+import com.github.mikephil.charting.data.LineData;
+import com.github.mikephil.charting.data.LineDataSet;
+import com.github.mikephil.charting.formatter.ValueFormatter;
+import com.github.mikephil.charting.interfaces.datasets.ILineDataSet;
 import com.google.gson.Gson;
 import com.sozolab.sumon.io.esense.esenselib.ESenseConfig;
+import com.sozolab.sumon.io.esense.esenselib.ESenseEvent;
 import com.sozolab.sumon.io.esense.esenselib.ESenseManager;
 
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.LinkedList;
+import java.util.List;
 
 import static android.Manifest.permission.RECORD_AUDIO;
 import static android.Manifest.permission.ACCESS_FINE_LOCATION;
 import static android.Manifest.permission.WRITE_EXTERNAL_STORAGE;
 
-public class MainActivity extends AppCompatActivity implements View.OnClickListener, AdapterView.OnItemSelectedListener {
-    public static String DEFAULT_NAME = "eSense-0371";
+public class MainActivity extends AppCompatActivity implements View.OnClickListener, AdapterView.OnItemSelectedListener, ChartDataListener {
+    public static String DEFAULT_NAME = "eSense-0372";
     public static ESenseConfig DEFAULT_CONFIG = new ESenseConfig();
     public static int DEFAULT_SAMPLING_RATE = 10;
     private ESenseConfig config = DEFAULT_CONFIG;
@@ -82,6 +97,17 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private SharedPreferences sharedPreferences;
     private SharedPreferences.Editor sharedPrefEditor;
     private CountDownTimer timer;
+    LineData accdata;
+    LineData gyrodata;
+    LineChart accChart;
+    LineChart gyroChart;
+    int[] colors = {Color.RED, Color.GREEN, Color.BLUE};
+    String[] accLabels = {"Ax", "Ay", "Az"};
+    String[] gyroLabels = {"Gx", "Gy", "Gz"};
+    ArrayList<LinkedList<Entry>> accEntries = new ArrayList<LinkedList<Entry>>();
+    ArrayList<LinkedList<Entry>> gyroEntries = new ArrayList<LinkedList<Entry>>();
+    ArrayList<LineDataSet> accSet = new ArrayList<>();
+    ArrayList<LineDataSet> gyroSet = new ArrayList<>();
    // private MediaPlayer mp = MediaPlayer.create(this, R.raw.beep);
 
     private Button newName;
@@ -95,7 +121,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     DatabaseHandler databaseHandler;
     SensorListenerManager sensorListenerManager;
     ConnectionListenerManager connectionListenerManager;
-
+    int displaySize = 100;
     private static final int PERMISSION_REQUEST_CODE = 200;
 
 
@@ -104,6 +130,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        for (int i = 0; i < 3; i++) {
+            accEntries.add(new LinkedList<>());
+            gyroEntries.add(new LinkedList<>());
+        }
         Log.d(TAG, "onCreate()");
 
         ActionBar actionBar = getSupportActionBar();
@@ -115,9 +145,15 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         sharedPreferences = getSharedPreferences("eSenseSharedPrefs", Context.MODE_PRIVATE);
         sharedPrefEditor = sharedPreferences.edit();
         samplingRate = sharedPreferences.getInt("samplingRate", 50);
-        deviceName = sharedPreferences.getString("deviceName", "eSense-0371");
+        deviceName = sharedPreferences.getString("deviceName", "eSense-0372");
         String parsedConfig = sharedPreferences.getString("eSenseConfig", "");
+        accChart = (LineChart) findViewById(R.id.acc_chart);
+        gyroChart = (LineChart) findViewById(R.id.gyro_chart);
 
+        accChart.setScaleEnabled(true);
+        gyroChart.setScaleEnabled(true);
+        accChart.setAutoScaleMinMaxEnabled(true);
+        gyroChart.setAutoScaleMinMaxEnabled(true);
         //Parse the Configuration
         assert parsedConfig != null;
         if (parsedConfig.equals("")) {
@@ -140,6 +176,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         newName = (Button) findViewById(R.id.new_person);
         connectButton = (Button) findViewById(R.id.connectButton);
         touchButton = (Button) findViewById(R.id.touch_button);
+
 
         ArrayAdapter<String> positionAdapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_item, getPositionArray());
         ArrayAdapter<String> patternAdapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_item, getPatternArray());
@@ -192,16 +229,27 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         timerShow = (TextView) findViewById(R.id.timer_show);
 
         databaseHandler = new DatabaseHandler(this);
-        activityListView = (ListView) findViewById(R.id.activityListView);
 
-        ArrayList<Activity> activityHistory = databaseHandler.getAllActivities();
+        Legend acclegend = accChart.getLegend();
+        acclegend.setEnabled(true);
+        Legend gyrolegend = gyroChart.getLegend();
+        gyrolegend.setEnabled(true);
 
-        if (activityHistory.size() > 0) {
-            activityListView.setAdapter(new ActivityListAdapter(this, activityHistory));
-        }
+        initDataSet();
+
+        accChart.invalidate();
+        gyroChart.invalidate();
+//        activityListView = (ListView) findViewById(R.id.activityListView);
+
+//        ArrayList<Activity> activityHistory = databaseHandler.getAllActivities();
+//
+//        if (activityHistory.size() > 0) {
+//            activityListView.setAdapter(new ActivityListAdapter(this, activityHistory));
+//        }
 
         audioRecordServiceIntent = new Intent(this, AudioRecordService.class);
         sensorListenerManager = new SensorListenerManager(this, config);
+        sensorListenerManager.addChartListener(this);
         connectionListenerManager = new ConnectionListenerManager(this, sensorListenerManager,
                 connectionTextView, deviceNameTextView, statusImageView, progressBar, sharedPrefEditor);
         connectionListenerManager.setSamplingRate(samplingRate);
@@ -248,7 +296,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 databaseHandler.clearAll();
                 FileHandler.deleteRecursive();
                 FileHandler.deleteCategorizedRecursive();
-                refreshActivityList();
+//                refreshActivityList();
                 return true;
             case R.id.reset_menu:
                 // Disconnect the device to reset
@@ -260,6 +308,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 // Go to setting
                 disconnect();
                 showSetting();
+                return true;
             default:
                 return super.onOptionsItemSelected(item);
         }
@@ -385,7 +434,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     //set the activity name given the spinner
     private void setActivityName() {
-        //TODO: read the value from spinner
         if (touchingSelector.getSelectedItem().toString().equals("Touching")) {
             StringBuilder builder = new StringBuilder();
             builder.append(maskSwitch.isActivated() ? "mask_" : "no_mask_");
@@ -428,6 +476,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     public void connectEarables() {
+        Log.d(TAG, "connecting to " + deviceName);
         eSenseManager.connect(timeout);
     }
 
@@ -592,7 +641,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         createCountDownTimer();
 
-        refreshActivityList();
+//        refreshActivityList();
         Log.d(TAG, "Stop Collection!");
         activityObj = null;
     }
@@ -704,7 +753,98 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     @Override
-    public void onNothingSelected(AdapterView<?> adapterView) {
+    public void onNothingSelected(AdapterView<?> parent) {
 
+    }
+
+
+    @Override
+    public void update(ESenseEvent evt) {
+        int currentSize = accEntries.get(0).size();
+
+        Log.d(TAG, "size() = "+ currentSize);
+
+        double[] acc = evt.convertAccToG(config);
+        double[] gyro = evt.convertGyroToDegPerSecond(config);
+
+        float x = (float) (accEntries.get(0).size() * (10.0 / displaySize));
+
+        for (int i = 0; i < 3; i++) {
+            Entry accEntry = new Entry(x, (float)acc[i]);
+
+            Entry gyroEntry = new Entry(x, (float) gyro[i]);
+
+            accdata.addEntry(accEntry, i);
+            gyrodata.addEntry(gyroEntry, i);
+        }
+
+        //Build data set for two graph
+
+        accChart.notifyDataSetChanged();
+        gyroChart.notifyDataSetChanged();
+
+
+        XAxis accx = accChart.getXAxis();
+
+        accx.setAxisMaximum(10f + 10 * (currentSize / displaySize));
+        accx.setAxisMinimum(0f + 10 * (currentSize / displaySize));
+        accChart.invalidate();
+        Log.d(TAG, "Update acc chart");
+
+
+        XAxis gyrox = gyroChart.getXAxis();
+
+        gyrox.setAxisMinimum(0f + 10 * (currentSize / displaySize));
+        gyrox.setAxisMaximum(10f+ 10 * (currentSize / displaySize));
+
+        gyroChart.invalidate();
+
+        Log.d(TAG, "update gyro chart");
+    }
+
+    private void initDataSet() {
+        for (int i = 0; i < 3; i++) {
+            if (i == 0) {
+                accSet.add(new LineDataSet(accEntries.get(0), "Ax"));
+            } else if (i == 1) {
+                accSet.add(new LineDataSet(accEntries.get(1), "Ay"));
+            } else {
+                accSet.add(new LineDataSet(accEntries.get(2), "Az"));
+            }
+            accSet.get(i).setAxisDependency(YAxis.AxisDependency.LEFT);
+        }
+
+        for (int i = 0; i < 3; i++) {
+            if (i == 0) {
+                gyroSet.add(new LineDataSet(gyroEntries.get(0), "Gx"));
+            } else if (i == 1) {
+                gyroSet.add(new LineDataSet(gyroEntries.get(1), "Gy"));
+            } else {
+                gyroSet.add(new LineDataSet(gyroEntries.get(2), "Gz"));
+            }
+
+            gyroSet.get(i).setAxisDependency(YAxis.AxisDependency.LEFT);
+        }
+
+        List<ILineDataSet> accDataSets = new ArrayList<>();
+        List<ILineDataSet> gyroDataSets = new ArrayList<>();
+
+        for (int i = 0; i < 3; i++) {
+            accSet.get(i).setColor(colors[i]);
+            gyroSet.get(i).setColor(colors[i]);
+            accSet.get(i).setMode(LineDataSet.Mode.CUBIC_BEZIER);
+            gyroSet.get(i).setMode(LineDataSet.Mode.CUBIC_BEZIER);
+            accSet.get(i).setDrawCircles(false);
+            gyroSet.get(i).setDrawCircles(false);
+            accDataSets.add(accSet.get(i));
+            gyroDataSets.add(gyroSet.get(i));
+        }
+
+        accdata = new LineData(accDataSets);
+
+        gyrodata = new LineData(gyroDataSets);
+
+        accChart.setData(accdata);
+        gyroChart.setData(gyrodata);
     }
 }

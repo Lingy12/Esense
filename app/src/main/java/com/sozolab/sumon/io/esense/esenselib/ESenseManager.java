@@ -9,9 +9,7 @@ import android.bluetooth.BluetoothGattService;
 import android.bluetooth.BluetoothManager;
 import android.bluetooth.BluetoothProfile;
 import android.content.Context;
-import android.nfc.Tag;
 import android.util.Log;
-import android.widget.Toast;
 
 import java.nio.charset.Charset;
 import java.util.HashMap;
